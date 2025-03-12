@@ -1,9 +1,11 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import styles from "../styles/Navbar.module.css";
-
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import "@solana/wallet-adapter-react-ui/styles.css"; // ✅ Ensure styles are loaded
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +25,11 @@ export default function Navbar() {
           <li><Link href="/services" className={styles.navItem} onClick={() => setIsOpen(false)}>Services</Link></li>
           <li><Link href="/wallet" className={styles.navItem} onClick={() => setIsOpen(false)}>Connect Wallet</Link></li>
         </ul>
+
+        {/* Wallet Connect Button (Fixed) */}
+        <div className={styles.walletButton}>
+          <WalletMultiButton />
+        </div>
 
         {/* Mobile Menu Button */}
         <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
