@@ -1,4 +1,5 @@
 "use client";
+
 import { useWallet } from "@solana/wallet-adapter-react";
 import {
     LAMPORTS_PER_SOL,
@@ -23,37 +24,37 @@ export default function DonatePage() {
             setMessage("❌ Please connect your wallet first.");
             return;
         }
-
+    
         if (!recipient) {
             setMessage("❌ Please enter a valid recipient address.");
             return;
         }
-
+    
         try {
             setLoading(true);
             setMessage("");
-
+    
             // ✅ Validate recipient address
             const recipientPublicKey = new PublicKey(recipient);
-
+    
             // ✅ Validate and convert amount
             const amountInLamports = parseFloat(amount) * LAMPORTS_PER_SOL;
             if (isNaN(amountInLamports) || amountInLamports <= 0) {
                 throw new Error("Invalid amount entered.");
             }
-
+    
             // ✅ Check wallet balance
             const balance = await connection.getBalance(publicKey);
             console.log("Wallet Balance (SOL):", balance / LAMPORTS_PER_SOL);
-
+    
             if (balance < amountInLamports) {
                 throw new Error("Insufficient funds! You may need more SOL for transaction fees.");
             }
-
+    
             // ✅ Get latest blockhash for transaction
             const { blockhash } = await connection.getLatestBlockhash();
             console.log("Latest Blockhash:", blockhash);
-
+    
             // ✅ Create transaction and explicitly set fee payer
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
@@ -62,30 +63,34 @@ export default function DonatePage() {
                     lamports: amountInLamports,
                 })
             );
-
+    
             transaction.feePayer = publicKey;
             transaction.recentBlockhash = blockhash;
-
+    
             // ✅ Estimate transaction fee before sending
             const feeEstimate = await connection.getFeeForMessage(transaction.compileMessage());
-            if (feeEstimate.value !== null) {
-                console.log("Estimated Transaction Fee (SOL):", feeEstimate.value / LAMPORTS_PER_SOL);
-            } else {
-                console.log("Transaction fee estimate unavailable.");
+            const estimatedFee = feeEstimate.value ?? 0; // Use 0 if fee estimate is null
+    
+            console.log("Estimated Transaction Fee (SOL):", estimatedFee / LAMPORTS_PER_SOL);
+    
+            // ✅ Ensure enough balance for transaction fee
+            if (balance < amountInLamports + estimatedFee) {
+                throw new Error("Insufficient funds after transaction fees! Try a smaller amount.");
             }
-
-
+    
             // ✅ Send transaction
             const signature = await sendTransaction(transaction, connection);
             setMessage(
                 `✅ Donation successful! [View Transaction](https://explorer.solana.com/tx/${signature}?cluster=devnet)`
             );
         } catch (error) {
+            console.error("Transaction error:", error);
             setMessage(`❌ Transaction failed: ${(error as Error).message}`);
         } finally {
             setLoading(false);
         }
     };
+    
 
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>

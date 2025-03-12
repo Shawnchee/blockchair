@@ -6,6 +6,8 @@ import { Menu, X } from "lucide-react";
 import styles from "../styles/Navbar.module.css";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css"; // ✅ Ensure styles are loaded
+import dynamic from "next/dynamic";
+const WalletButton = dynamic(() => import("./WalletButton"), { ssr: false });
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,13 +24,13 @@ export default function Navbar() {
         <ul className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
           <li><Link href="/" className={styles.navItem} onClick={() => setIsOpen(false)}>Home</Link></li>
           <li><Link href="/donate" className={styles.navItem} onClick={() => setIsOpen(false)}>Donate</Link></li>
-          <li><Link href="/services" className={styles.navItem} onClick={() => setIsOpen(false)}>Services</Link></li>
+          <li><Link href="/profile" className={styles.navItem} onClick={() => setIsOpen(false)}>Profile</Link></li>
           <li><Link href="/wallet" className={styles.navItem} onClick={() => setIsOpen(false)}>Connect Wallet</Link></li>
         </ul>
 
         {/* Wallet Connect Button (Fixed) */}
         <div className={styles.walletButton}>
-          <WalletMultiButton />
+          <WalletButton />
         </div>
 
         {/* Mobile Menu Button */}
