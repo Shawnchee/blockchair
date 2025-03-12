@@ -71,7 +71,7 @@ export default function SignUpPage() {
       };
 
       // Redirect to home page after successful signup
-      router.push("/");
+      router.push("/authentication/login");
     } catch (err) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
