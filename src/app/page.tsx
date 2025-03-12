@@ -3,6 +3,8 @@
 import { withQueryClient } from "@/components/HOC/withQueryClient";
 import { fetchUserData } from "@/services/userService";
 import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import HeroSection from "@/components/home/heroSection";
+import CampaignSection from "@/components/home/campaignSection";
 
 const queryClient = new QueryClient();
 
@@ -10,7 +12,8 @@ function Home() {
 
   return (
     <div>
-      <h1>You are logged in</h1>
+      <HeroSection />
+      <CampaignSection />
     </div>
   )
 }
