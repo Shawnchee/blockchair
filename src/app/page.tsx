@@ -7,25 +7,12 @@ import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-quer
 const queryClient = new QueryClient();
 
 function Home() {
-  const { data: userData, error, isLoading} = useQuery({
-    queryKey: ['userData'],
-    queryFn: fetchUserData,
-  });
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
 
   return (
     <div>
-      <h1>This is the user below in the database:</h1>
-      <pre>{JSON.stringify(userData, null, 2)}</pre>
+      <h1>You are logged in</h1>
     </div>
   )
 }
 
-export default withQueryClient(Home);
+export default Home;
