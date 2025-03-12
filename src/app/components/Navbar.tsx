@@ -21,7 +21,7 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <ul className={`${styles.navLinks} ${isOpen ? styles.active : ""}`}>
           <li><Link href="/" className={styles.navItem} onClick={() => setIsOpen(false)}>Home</Link></li>
-          <li><Link href="/about" className={styles.navItem} onClick={() => setIsOpen(false)}>About</Link></li>
+          <li><Link href="/donate" className={styles.navItem} onClick={() => setIsOpen(false)}>Donate</Link></li>
           <li><Link href="/services" className={styles.navItem} onClick={() => setIsOpen(false)}>Services</Link></li>
           <li><Link href="/wallet" className={styles.navItem} onClick={() => setIsOpen(false)}>Connect Wallet</Link></li>
         </ul>

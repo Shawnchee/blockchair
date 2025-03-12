@@ -1,60 +1,121 @@
 "use client";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
+import {
+    LAMPORTS_PER_SOL,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+    Connection,
+    clusterApiUrl,
+} from "@solana/web3.js";
 import { useState } from "react";
 
 export default function DonatePage() {
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
-  const [amount, setAmount] = useState("");
-  const [charityWallet, setCharityWallet] = useState("");
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    const { publicKey, sendTransaction } = useWallet();
+    const [recipient, setRecipient] = useState("");
+    const [amount, setAmount] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
 
-  const handleDonate = async () => {
-    if (!publicKey) return alert("Please connect your wallet first!");
-    if (!amount || isNaN(Number(amount))) return alert("Enter a valid amount!");
-    if (!charityWallet) return alert("Enter a charity wallet address!");
+    const handleDonate = async () => {
+        if (!publicKey) {
+            setMessage("❌ Please connect your wallet first.");
+            return;
+        }
 
-    try {
-      const recipientPubKey = new PublicKey(charityWallet);
+        if (!recipient) {
+            setMessage("❌ Please enter a valid recipient address.");
+            return;
+        }
 
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: recipientPubKey,
-          lamports: Number(amount) * 1e9, // Convert SOL to lamports
-        })
-      );
+        try {
+            setLoading(true);
+            setMessage("");
 
-      const signature = await sendTransaction(transaction, connection);
-      alert(`Donation sent! Tx Hash: ${signature}`);
-    } catch (error) {
-      console.error("Donation failed", error);
-      alert("Transaction failed!");
-    }
-  };
+            // ✅ Validate recipient address
+            const recipientPublicKey = new PublicKey(recipient);
 
-  return (
-    <div>
-      <h1>Donate to Charity</h1>
-      <p>Enter a charity wallet address and amount to donate.</p>
+            // ✅ Validate and convert amount
+            const amountInLamports = parseFloat(amount) * LAMPORTS_PER_SOL;
+            if (isNaN(amountInLamports) || amountInLamports <= 0) {
+                throw new Error("Invalid amount entered.");
+            }
 
-      {/* Input for Charity Wallet */}
-      <input
-        type="text"
-        placeholder="Charity Wallet Address"
-        value={charityWallet}
-        onChange={(e) => setCharityWallet(e.target.value)}
-      />
+            // ✅ Check wallet balance
+            const balance = await connection.getBalance(publicKey);
+            console.log("Wallet Balance (SOL):", balance / LAMPORTS_PER_SOL);
 
-      {/* Input for Amount */}
-      <input
-        type="number"
-        placeholder="Enter amount (SOL)"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
+            if (balance < amountInLamports) {
+                throw new Error("Insufficient funds! You may need more SOL for transaction fees.");
+            }
 
-      <button onClick={handleDonate}>Donate</button>
-    </div>
-  );
+            // ✅ Get latest blockhash for transaction
+            const { blockhash } = await connection.getLatestBlockhash();
+            console.log("Latest Blockhash:", blockhash);
+
+            // ✅ Create transaction and explicitly set fee payer
+            const transaction = new Transaction().add(
+                SystemProgram.transfer({
+                    fromPubkey: publicKey,
+                    toPubkey: recipientPublicKey,
+                    lamports: amountInLamports,
+                })
+            );
+
+            transaction.feePayer = publicKey;
+            transaction.recentBlockhash = blockhash;
+
+            // ✅ Estimate transaction fee before sending
+            const feeEstimate = await connection.getFeeForMessage(transaction.compileMessage());
+            if (feeEstimate.value !== null) {
+                console.log("Estimated Transaction Fee (SOL):", feeEstimate.value / LAMPORTS_PER_SOL);
+            } else {
+                console.log("Transaction fee estimate unavailable.");
+            }
+
+
+            // ✅ Send transaction
+            const signature = await sendTransaction(transaction, connection);
+            setMessage(
+                `✅ Donation successful! [View Transaction](https://explorer.solana.com/tx/${signature}?cluster=devnet)`
+            );
+        } catch (error) {
+            setMessage(`❌ Transaction failed: ${(error as Error).message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <h1>Donate with Solana</h1>
+            <p>Your donations help support our cause. Thank you!</p>
+
+            <input
+                type="text"
+                placeholder="Enter recipient address"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                style={{ width: "80%", padding: "10px", margin: "10px" }}
+            />
+            <input
+                type="number"
+                placeholder="Enter amount (SOL)"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                style={{ width: "80%", padding: "10px", margin: "10px" }}
+            />
+
+            <button
+                onClick={handleDonate}
+                disabled={loading}
+                style={{ padding: "10px 20px", fontSize: "16px" }}
+            >
+                {loading ? "Processing..." : `Donate ${amount || "0"} SOL`}
+            </button>
+
+            {message && <p style={{ marginTop: "20px", color: "green" }}>{message}</p>}
+        </div>
+    );
 }
