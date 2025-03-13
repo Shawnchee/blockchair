@@ -9,6 +9,8 @@ import "@solana/wallet-adapter-react-ui/styles.css"; // Ensure styles are loaded
 import supabase from "@/utils/supabase/client";
 import { Button } from "./ui/button";
 import { Session } from '@supabase/supabase-js';
+import dynamic from "next/dynamic";
+const WalletButton = dynamic(() => import("../app/components/WalletButton"), { ssr: false });
 
 
 export default function Navbar() {
@@ -92,6 +94,16 @@ export default function Navbar() {
             </Link>
           </li>
         </ul>
+
+        {/* Wallet Connect Button (Fixed) */}
+        <div className={styles.walletButton}>
+          <WalletButton />
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
 
         {/* Authentication Buttons */}
         <div className={styles.walletButton}>
