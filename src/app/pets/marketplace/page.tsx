@@ -69,6 +69,12 @@ export default function MarketplacePage() {
     }
   }
 
+  const getImageUrl = (path: string) => {
+    const bucket = 'virtual-pets'
+    return `https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/${bucket}/${path}`;
+  }
+
+
   return (
     <div className="container px-4 py-8 md:px-6 md:py-12">
       <div className="flex justify-between items-center mb-6">
@@ -106,7 +112,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image_url || "/placeholder.svg"}
+                      src={getImageUrl(item.image_url) || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -132,7 +138,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image_url || "/placeholder.svg"}
+                      src={getImageUrl(item.image_url) || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -158,7 +164,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image_url || "/placeholder.svg"}
+                      src={getImageUrl(item.image_url) || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -184,7 +190,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image_url || "/placeholder.svg"}
+                      src={getImageUrl(item.image_url) || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
