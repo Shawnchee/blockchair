@@ -1,18 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Utensils, Shirt, Edit, BarChart3 } from "lucide-react"
 import PetStats from "@/components/pets/pet-stats"
 import PetActivityLog from "@/components/pets/pet-activity-log"
+import { useUserData } from "@/hooks/fetchUserData"
 
 export default function PetPage() {
   const [petName, setPetName] = useState("Fluffy")
   const [background, setBackground] = useState("forest")
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(petName)
+  // test pull
+  const user = useUserData("da0bedc0-b399-4c8d-8d5b-28c70224f7e4")
 
   const backgrounds = {
     forest: "bg-gradient-to-b from-green-100 to-blue-100",
@@ -31,6 +34,17 @@ export default function PetPage() {
     setBackground(bg)
   }
 
+  // test image rendering
+  const getPet = (path: string) => {
+    const bucket = 'virtual-pets'
+    const folder = 'pet-combined'
+    return `https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/${bucket}/${folder}/${path}`;
+  }
+
+  // set real-time subscription
+
+  console.log("asdas", getPet(user?.pet_owned))
+
   return (
     <div className="container px-4 py-8 md:px-6 md:py-12 ml-auto mr-auto">
 
@@ -42,7 +56,7 @@ export default function PetPage() {
           >
             <div className="relative w-[200px] h-[200px] cursor-pointer transform transition-transform hover:scale-110 active:scale-95">
               <Image
-                src="/placeholder.svg?height=200&width=200"
+                src={getPet(user?.pet_owned)}
                 alt={petName}
                 width={200}
                 height={200}
