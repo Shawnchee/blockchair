@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,108 +15,34 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Shirt, Apple, Crown, ImageIcon, ShoppingCart } from "lucide-react"
+import supabase from "@/utils/supabase/client";
+
 
 // Mock marketplace data
-const marketplaceItems = {
-  food: [
-    {
-      id: 1,
-      name: "Premium Apple",
-      description: "Increases happiness by 15",
-      price: 50,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 2,
-      name: "Golden Carrot",
-      description: "Increases happiness by 10",
-      price: 30,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 3,
-      name: "Birthday Cake",
-      description: "Increases happiness by 30",
-      price: 100,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 4,
-      name: "Ice Cream",
-      description: "Increases happiness by 20",
-      price: 75,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-  ],
-  clothing: [
-    {
-      id: 5,
-      name: "Superhero Cape",
-      description: "A magical cape",
-      price: 200,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    { id: 6, name: "Winter Hat", description: "A cozy hat", price: 150, image: "/placeholder.svg?height=80&width=80" },
-    {
-      id: 7,
-      name: "Summer Dress",
-      description: "A pretty dress",
-      price: 250,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-  ],
-  accessories: [
-    {
-      id: 8,
-      name: "Sunglasses",
-      description: "Cool sunglasses",
-      price: 100,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 9,
-      name: "Gold Necklace",
-      description: "A fancy necklace",
-      price: 300,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 10,
-      name: "Magic Wand",
-      description: "A mystical wand",
-      price: 350,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-  ],
-  backgrounds: [
-    {
-      id: 11,
-      name: "Enchanted Forest",
-      description: "A magical forest",
-      price: 400,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 12,
-      name: "Tropical Beach",
-      description: "A paradise beach",
-      price: 400,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-    {
-      id: 13,
-      name: "Night City",
-      description: "A city at night",
-      price: 400,
-      image: "/placeholder.svg?height=80&width=80",
-    },
-  ],
-}
+const fetchMarketplaceItems = async () => {
+    const { data, error } = await supabase.from('items').select('*')
+    if (error) {
+      console.error("Error fetching marketplace items:", error)
+      return {}
+    }
+    return data.reduce((acc, item) => {
+      if (!acc[item.type]) {
+        acc[item.type] = []
+      }
+      acc[item.type].push(item)
+      console.log(acc)
+      return acc
+    }, {})
+  } 
 
 export default function MarketplacePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false)
   const [karmaShards, setKarmaShards] = useState(500)
+  const [marketplaceItems, setMarketplaceItems] = useState<any>({})
+  useEffect(() => {
+    fetchMarketplaceItems().then(setMarketplaceItems)
+  }, [])
 
   const handleItemClick = (item: any) => {
     setSelectedItem(item)
@@ -146,23 +72,23 @@ export default function MarketplacePage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-12">
         <Tabs defaultValue="food" className="w-full">
           <TabsList className="grid grid-cols-4 mb-6 w-full">
-            <TabsTrigger value="food" className="flex items-center gap-2">
+            {<TabsTrigger value="food" className="flex items-center gap-2 cursor-pointer">
               <Apple className="h-4 w-4" /> Food
-            </TabsTrigger>
-            <TabsTrigger value="clothing" className="flex items-center gap-2">
+            </TabsTrigger>}
+            <TabsTrigger value="clothing" className="flex items-center gap-2 cursor-pointer">
               <Shirt className="h-4 w-4" /> Clothing
             </TabsTrigger>
-            <TabsTrigger value="accessories" className="flex items-center gap-2">
+            <TabsTrigger value="accessories" className="flex items-center gap-2 cursor-pointer">
               <Crown className="h-4 w-4" /> Accessories
             </TabsTrigger>
-            <TabsTrigger value="backgrounds" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" /> Backgrounds
+            <TabsTrigger value="background" className="flex items-center gap-2 cursor-pointer">
+              <ImageIcon className="h-4 w-4" /> Background
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="food" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.food.map((item) => (
+              {marketplaceItems.food && marketplaceItems.food.map((item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -170,7 +96,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.image_url || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -188,7 +114,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="clothing" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.clothing.map((item) => (
+              {marketplaceItems.clothing && marketplaceItems.clothing.map((item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -196,7 +122,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.image_url || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -214,7 +140,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="accessories" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.accessories.map((item) => (
+              {marketplaceItems.accessories && marketplaceItems.accessories.map((item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -222,7 +148,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.image_url || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -238,9 +164,9 @@ export default function MarketplacePage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="backgrounds" className="mt-0">
+          <TabsContent value="background" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.backgrounds.map((item) => (
+              {marketplaceItems.background && marketplaceItems.background.map((item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -248,7 +174,7 @@ export default function MarketplacePage() {
                 >
                   <CardContent className="p-4 flex flex-col items-center">
                     <Image
-                      src={item.image || "/placeholder.svg"}
+                      src={item.image_url || "/placeholder.svg"}
                       alt={item.name}
                       width={80}
                       height={80}
@@ -273,7 +199,7 @@ export default function MarketplacePage() {
                 <div className="space-y-4">
                   <div className="flex justify-center">
                     <Image
-                      src={selectedItem.image || "/placeholder.svg"}
+                      src={selectedItem.image_url || "/placeholder.svg"}
                       alt={selectedItem.name}
                       width={120}
                       height={120}
@@ -314,7 +240,7 @@ export default function MarketplacePage() {
           </DialogHeader>
           <div className="flex justify-center py-4">
             <Image
-              src={selectedItem?.image || "/placeholder.svg?height=100&width=100"}
+              src={selectedItem?.image_url || "/placeholder.svg?height=100&width=100"}
               alt={selectedItem?.name || "Item"}
               width={100}
               height={100}
