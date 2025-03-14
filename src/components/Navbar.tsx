@@ -64,9 +64,9 @@ export default function Navbar() {
         </ul>
 
         {/* Wallet Connect Button (Fixed) */}
-        <div className={styles.walletButton}>
+        {/* <div className={styles.walletButton}>
           <WalletButton />
-        </div>
+        </div> */}
 
         {/* Mobile Menu Button */}
         <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
