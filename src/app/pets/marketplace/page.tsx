@@ -35,6 +35,16 @@ const fetchMarketplaceItems = async () => {
     }, {})
   } 
 
+  interface Item {
+    id: string,
+    name: string,
+    type: string,
+    price: number,
+    image_url: string,
+    description: string,
+  }
+
+  
 export default function MarketplacePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false)
@@ -44,7 +54,7 @@ export default function MarketplacePage() {
     fetchMarketplaceItems().then(setMarketplaceItems)
   }, [])
 
-  const handleItemClick = (item: any) => {
+  const handleItemClick = (item: Item) => {
     setSelectedItem(item)
   }
 
@@ -88,7 +98,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="food" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.food && marketplaceItems.food.map((item) => (
+              {marketplaceItems.food && marketplaceItems.food.map((item: Item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -114,7 +124,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="clothing" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.clothing && marketplaceItems.clothing.map((item) => (
+              {marketplaceItems.clothing && marketplaceItems.clothing.map((item: Item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -140,7 +150,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="accessories" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.accessories && marketplaceItems.accessories.map((item) => (
+              {marketplaceItems.accessories && marketplaceItems.accessories.map((item: Item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
@@ -166,7 +176,7 @@ export default function MarketplacePage() {
 
           <TabsContent value="background" className="mt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {marketplaceItems.background && marketplaceItems.background.map((item) => (
+              {marketplaceItems.background && marketplaceItems.background.map((item: Item) => (
                 <Card
                   key={item.id}
                   className={`cursor-pointer transition-all ${selectedItem?.id === item.id ? "ring-2 ring-purple-500" : ""}`}
