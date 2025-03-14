@@ -47,6 +47,8 @@ export default function SignUpPage() {
       });
       console.log("Signed up", authData);
 
+      // TODO: link authData.user.id with user data in the Users table
+
       // Insert user data into the Users table
       const { error: userError } = await supabase.from("users").insert([
         {
