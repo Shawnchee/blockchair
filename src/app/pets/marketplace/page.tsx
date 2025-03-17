@@ -16,6 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Shirt, Apple, Crown, ImageIcon, ShoppingCart } from "lucide-react"
 import supabase from "@/utils/supabase/client";
+import { useUserData } from "@/hooks/fetchUserData"
+import getCurrentUser from "@/hooks/getCurrentUser"
 
 
 // Mock marketplace data
@@ -30,7 +32,6 @@ const fetchMarketplaceItems = async () => {
         acc[item.type] = []
       }
       acc[item.type].push(item)
-      console.log(acc)
       return acc
     }, {})
   } 
@@ -48,8 +49,20 @@ const fetchMarketplaceItems = async () => {
 export default function MarketplacePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false)
-  const [karmaShards, setKarmaShards] = useState(500)
+  const [karmaShards, setKarmaShards] = useState(-1);
   const [marketplaceItems, setMarketplaceItems] = useState<any>({})
+
+  // Get user id from session
+  const user = useUserData(getCurrentUser()?.id)
+
+  useEffect(() => {
+    console.log(user)
+    if (user) {
+      setKarmaShards(user.coins)
+    }
+  }
+  , [user])
+
   useEffect(() => {
     fetchMarketplaceItems().then(setMarketplaceItems)
   }, [])

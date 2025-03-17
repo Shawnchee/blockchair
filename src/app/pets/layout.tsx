@@ -1,20 +1,19 @@
 import type React from "react";
-import "@/app/globals.css"
-import type { Metadata } from "next"
-import { Nunito } from "next/font/google"
-// import Header from "@/components/header";
-// import Footer from "@/components/footer";
+import "@/app/globals.css";
+import type { Metadata } from "next";
+import { Nunito } from "next/font/google";
+import AuthWrapper from "@/components/HOC/AuthWrapper"; // Import the AuthWrapper component
 
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-nunito",
-})
+});
 
 export const metadata: Metadata = {
   title: "Virtual Pet Gamification",
   description: "Adopt, care for, and dress up your virtual pet while making real-world donations.",
-}
+};
 
 export default function RootLayout({
   children,
@@ -29,7 +28,7 @@ export default function RootLayout({
             {/* <Header /> */}
             <div className="flex-1">
                 <div className="container ml-auto mr-auto">
-                    {children}
+                    <AuthWrapper>{children}</AuthWrapper> {/* Wrap children with AuthWrapper */}
                 </div>
             {/* <Footer /> */}
             </div>
@@ -37,6 +36,5 @@ export default function RootLayout({
         {/* </ThemeProvider> */}
       </body>
     </html>
-  )
+  );
 }
-

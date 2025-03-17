@@ -7,15 +7,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Utensils, Shirt, Edit, BarChart3 } from "lucide-react"
 import PetStats from "@/components/pets/pet-stats"
 import PetActivityLog from "@/components/pets/pet-activity-log"
-import { useUserData } from "@/hooks/fetchUserData"
+import getCurrentUser from "@/hooks/getCurrentUser"
 
 export default function PetPage() {
   const [petName, setPetName] = useState("Fluffy")
   const [background, setBackground] = useState("forest")
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(petName)
-  // test pull
-  const user = useUserData("da0bedc0-b399-4c8d-8d5b-28c70224f7e4")
+
+  // Get user data
+  const user = getCurrentUser()
+  console.log(user)
 
   const backgrounds = {
     forest: "bg-gradient-to-b from-green-100 to-blue-100",
@@ -34,20 +36,26 @@ export default function PetPage() {
     setBackground(bg)
   }
 
-  // test image rendering
   const getPet = (path: string) => {
     const bucket = 'virtual-pets'
     const folder = 'pet-combined'
     return `https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/${bucket}/${folder}/${path}`;
   }
 
-  // set real-time subscription
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div>
+          <h1 className="text-3xl font-bold text-center">Loading...</h1>
+        </div>
+      </div>
+    )
+  }
 
-  console.log("asdas", getPet(user?.pet_owned))
+  const petImage = user.pet_owned ? getPet(user.pet_owned) : "/placeholder.svg"
 
   return (
     <div className="container px-4 py-8 md:px-6 md:py-12 ml-auto mr-auto">
-
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-12">
         {/* Pet Display Area */}
         <div className="flex flex-col items-center">
@@ -56,7 +64,7 @@ export default function PetPage() {
           >
             <div className="relative w-[200px] h-[200px] cursor-pointer transform transition-transform hover:scale-110 active:scale-95">
               <Image
-                src={getPet(user?.pet_owned)}
+                src={petImage}
                 alt={petName}
                 width={200}
                 height={200}
@@ -150,4 +158,3 @@ export default function PetPage() {
     </div>
   )
 }
-
