@@ -29,10 +29,14 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.479.0",
     "next": "^15.2.1",
+    "node-fetch": "^3.3.2",
+    "puppeteer": "^24.4.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "ssl-checker": "^2.0.10",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "whois-json": "^2.0.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -42,6 +46,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web": "^0.0.210",
+    "@types/whois-json": "^2.0.4",
     "@types/ws": "^8.18.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
