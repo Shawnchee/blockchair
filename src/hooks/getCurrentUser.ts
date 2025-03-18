@@ -4,6 +4,7 @@ import supabase from "@/utils/supabase/client";
 
 interface User extends SupabaseUser {
   pet_owned?: string;
+  coins?: number;
 }
 
 
