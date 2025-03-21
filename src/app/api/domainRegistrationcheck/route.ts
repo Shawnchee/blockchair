@@ -1,5 +1,5 @@
 import { NextRequest , NextResponse } from 'next/server';
-import { registrationCheck } from '@/utils/regCheck/registrationCheck';
+import { registrationCheck } from '@/utils/regCheck/domainRegistrationCheck';
 
 export async function POST(req: NextRequest) {
     try {
