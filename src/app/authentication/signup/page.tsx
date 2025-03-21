@@ -47,10 +47,12 @@ export default function SignUpPage() {
       });
       console.log("Signed up", authData);
 
+      // TODO: link authData.user.id with user data in the Users table
+
       // Insert user data into the Users table
       const { error: userError } = await supabase.from("users").insert([
         {
-            
+          id: authData.user?.id,
           email: formData.email,
           password: formData.password, // Store hashed password in real cases!
           role: tab,

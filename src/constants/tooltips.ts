@@ -1,0 +1,13 @@
+export const COMPANY_CHECK_TOOLTIPS = {
+    trustworthinessScore: "A calculated percentage (0-100%) indicating overall trustworthiness based on multiple verification factors including registration, website security, content, and financial transparency.",
+    riskLevel: "Overall risk assessment categorized as Low, Medium, or High. This considers verification status, financial transparency, domain security, and any identified red flags.",
+    redFlags: "Critical issues detected that may indicate potential problems with the organization's legitimacy, including unverified registration, missing financial records, or suspicious website characteristics.",
+    companyInformation: "Official details about the organization, including registration status, jurisdiction, business type, and headquarters location. Verified data is collected from official government databases and registries.",
+    contentCredibility: "Assessment of website content quality and transparency, including completeness of the About Us section, verifiable contact information, partnerships with known organizations, and media coverage that confirms legitimacy.",
+    financialTransparency: "Evaluation of the organization's financial openness, including availability of public financial reports, donor information, annual revenue, and any concerning financial practices or inconsistencies that might indicate mismanagement.",
+    aiEnhancedAssessment: "Advanced AI analysis that may adjust the trustworthiness score based on additional factors not captured in standard metrics, including global reputation, organizational history, and contextual understanding of the organization's mission and activities.",
+    finalEvaluation: "Comprehensive AI-generated assessment combining all verification factors to provide an overall recommendation about the organization's trustworthiness, with guidance on how donors should proceed.",
+    recommendation: "Final recommendation categorized as \"Trusted,\" \"Proceed with Caution,\" or \"High Risk,\" with a detailed explanation of why this assessment was made and specific guidance for potential donors.",
+    aiScoreAdjustment: "Comparison between the original automated trustworthiness score and the AI-adjusted score, with detailed reasoning for any adjustments made based on contextual understanding or additional research.",
+    riskFactors: "Specific concerns identified during analysis that potential donors should be aware of before proceeding, including unverified information, suspicious patterns, or lack of transparency in key areas."
+  };
