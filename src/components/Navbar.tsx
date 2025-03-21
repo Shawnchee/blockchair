@@ -60,6 +60,7 @@ export default function Navbar() {
           <li><Link href="/" className={styles.navItem} onClick={() => setIsOpen(false)}>Home</Link></li>
           <li><Link href="/donate" className={styles.navItem} onClick={() => setIsOpen(false)}>Donate</Link></li>
           <li><Link href="/profile" className={styles.navItem} onClick={() => setIsOpen(false)}>Profile</Link></li>
+          <li><Link href="/check-wallet" className={styles.navItem} onClick={() => setIsOpen(false)}>Check Wallet</Link></li>
           <li><Link href="/wallet" className={styles.navItem} onClick={() => setIsOpen(false)}>Connect Wallet</Link></li>
         </ul>
 

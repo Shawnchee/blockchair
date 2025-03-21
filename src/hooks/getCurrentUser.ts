@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser} from "@supabase/supabase-js";
 import supabase from "@/utils/supabase/client";
+
+interface User extends SupabaseUser {
+  pet_owned?: string;
+  coins?: number;
+}
+
 
 const getCurrentUser = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -12,7 +18,7 @@ const getCurrentUser = () => {
         console.error("Error fetching user:", error);
         return;
       }
-      setUser(user);
+      setUser(user as User);
     };
 
     fetchUser();

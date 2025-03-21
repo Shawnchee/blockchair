@@ -16,6 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Shirt, Apple, Crown, ImageIcon, ShoppingCart } from "lucide-react"
 import supabase from "@/utils/supabase/client";
+import { useUserData } from "@/hooks/fetchUserData"
+import getCurrentUser from "@/hooks/getCurrentUser"
 
 
 // Mock marketplace data
@@ -30,7 +32,6 @@ const fetchMarketplaceItems = async () => {
         acc[item.type] = []
       }
       acc[item.type].push(item)
-      console.log(acc)
       return acc
     }, {})
   } 
@@ -45,11 +46,75 @@ const fetchMarketplaceItems = async () => {
   }
 
   
+  
+  
 export default function MarketplacePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false)
-  const [karmaShards, setKarmaShards] = useState(500)
+  const [karmaShards, setKarmaShards] = useState(0);
   const [marketplaceItems, setMarketplaceItems] = useState<any>({})
+  const [user, setUser] = useState(null)
+// Get user data
+  // const user = getCurrentUser()
+  // console.log(user)
+
+  const sesUser = getCurrentUser()
+
+  useEffect(() => {
+    if(sesUser?.email) {
+      const fetchUser = async () => {
+        const { data, error } = await supabase
+          .from("users")
+          .select()
+          .eq('email',"Somendran737@gmail.com")
+          .single()
+        if (error) {
+          console.error(error)
+          return
+        }
+        console.log("Setting User data")
+        console.log(data)
+        setUser(data)
+      }
+      fetchUser()
+    }
+  }, [sesUser])
+
+  useEffect(() => {
+    if (user) {
+      console.log("User obj:" + user);
+      setKarmaShards(user.coins)
+      // setPetName(user.pet_name)
+      // setBackground(user.pet_background)
+    }
+  }, [user])
+  
+
+  // Get user id from session
+  // TODO - Setup proper user Type
+  const dbHandlePurchase = async (user, purchaseItem:Item) => {
+    const { data, error } = await supabase
+      .from("users")
+      .update({ coins: karmaShards - purchaseItem.price })
+      .eq('email',user.email)
+
+    const { data:userItemData, error:userItemError } = await supabase.from("user_items").insert([
+      { user_id: user.id, item_id: purchaseItem.id,purchased_at: new Date(),selected: false }
+    ])
+    if (error) {
+      console.error(error)
+      return
+    }
+    if (userItemError) {
+      console.error(userItemError)
+      return
+    }
+    console.log("Updated user data")
+    console.log(data)
+  }
+  
+  
+
   useEffect(() => {
     fetchMarketplaceItems().then(setMarketplaceItems)
   }, [])
@@ -62,8 +127,11 @@ export default function MarketplacePage() {
     if (selectedItem && karmaShards >= selectedItem.price) {
       setKarmaShards(karmaShards - selectedItem.price)
       // Logic to add item to inventory would go here
-      alert(`Successfully purchased ${selectedItem.name}!`)
-      setShowPurchaseDialog(false)
+      dbHandlePurchase(user,selectedItem).then(() => {
+        alert(`Successfully purchased ${selectedItem.name}!`)
+        setShowPurchaseDialog(false)
+      }
+      )
     } else {
       alert("Not enough Karma Shards!")
     }
@@ -215,7 +283,7 @@ export default function MarketplacePage() {
                 <div className="space-y-4">
                   <div className="flex justify-center">
                     <Image
-                      src={selectedItem.image_url || "/placeholder.svg"}
+                      src={getImageUrl(selectedItem.image_url) || "/placeholder.svg"}
                       alt={selectedItem.name}
                       width={120}
                       height={120}
@@ -256,7 +324,7 @@ export default function MarketplacePage() {
           </DialogHeader>
           <div className="flex justify-center py-4">
             <Image
-              src={selectedItem?.image_url || "/placeholder.svg?height=100&width=100"}
+              src={getImageUrl(selectedItem?.image_url) || "/placeholder.svg?height=100&width=100"}
               alt={selectedItem?.name || "Item"}
               width={100}
               height={100}
