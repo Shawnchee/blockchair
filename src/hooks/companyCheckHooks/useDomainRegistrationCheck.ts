@@ -16,7 +16,7 @@ export function useRegistrationCheck() {
     setError(null);
 
     try {
-      const response = await fetch("/api/registrationcheck", {
+      const response = await fetch("/api/domainRegistrationcheck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
