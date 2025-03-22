@@ -21,7 +21,7 @@ const BlogCard: React.FC<BlogProps> = ({ id,title, bg_link,tag,author,likes }) =
         <h3 className="text-lg font-semibold my-2">{title}</h3>
         {
             tag.split(',').map((tag) => (
-                <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full mr-2">{tag}</span>
+                <span key={tag} className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full mr-2">{tag}</span>
             ))
         }
       </div>
