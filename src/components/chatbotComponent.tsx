@@ -108,7 +108,7 @@ useEffect(() => {
     <>
       <Button
   onClick={() => setIsOpen(true)}
-  className="fixed bottom-6 right-6 rounded-full w-20 h-20 shadow-lg flex items-center justify-center  overflow-hidden cursor-pointer"
+  className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-lg flex items-center justify-center  overflow-hidden cursor-pointer"
   size="icon"
 >
   {/* Only show loader when actively loading (not for error states) */}
