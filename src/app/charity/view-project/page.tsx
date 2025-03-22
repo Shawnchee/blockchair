@@ -1,7 +1,7 @@
 "use client"; // Only needed in Next.js App Router
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../../../lib/supabaseClient";
 import Link from "next/link";
 
 interface DonationProps {
@@ -13,7 +13,7 @@ interface DonationProps {
 }
 
 const DonationCard: React.FC<DonationProps> = ({ id,title, location, cover_image, total_amount }) => (
-  <Link href={`/donate/${id}`} passHref>
+  <Link href={`/charity/view-project/${id}`} passHref>
     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
       <img src={cover_image} alt={title} className="w-full h-40 object-cover" />
       <div className="p-4">
