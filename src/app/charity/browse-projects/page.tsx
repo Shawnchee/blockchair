@@ -13,7 +13,7 @@ interface DonationProps {
 }
 
 const DonationCard: React.FC<DonationProps> = ({ id,title, location, cover_image, total_amount }) => (
-  <Link href={`/charity/${id}`} passHref>
+  <Link href={`/charity/browse-projects/${id}`} passHref>
     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
       <img src={cover_image} alt={title} className="w-full h-40 object-cover" />
       <div className="p-4">

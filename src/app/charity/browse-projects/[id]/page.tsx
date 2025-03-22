@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import supabase from "@/utils/supabase/client";
+import { supabase } from "../../../../lib/supabaseClient";
 
 interface Donation {
     id: string;
