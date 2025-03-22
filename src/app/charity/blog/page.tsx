@@ -1,45 +1,68 @@
-"use client";
+"use client"; // Only needed in Next.js App Router
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../../../lib/supabaseClient";
+import Link from "next/link";
 
-export default function Blog() {
+interface BlogProps {
+  id: string;
+  title: string;
+  bg_link: string;
+  tag:string;
+  author:string;
+  likes:number;
+}
+
+const BlogCard: React.FC<BlogProps> = ({ id,title, bg_link,tag,author,likes }) => (
+  <Link href={`/charity/blog/${id}`} passHref>
+    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <img src={bg_link} alt={title} className="w-full h-40 object-cover" />
+      <div className="p-4">
+        <h3 className="text-lg font-semibold my-2">{title}</h3>
+        {
+            tag.split(',').map((tag) => (
+                <span key={tag} className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full mr-2">{tag}</span>
+            ))
+        }
+      </div>
+    </div>
+  </Link>
+);
+
+const BlogPage = () => {
+  const [blogs, setBlogs] = useState<BlogProps[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchDonations = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from("charity_blog").select("*");
+
+      if (error) {
+        console.error("Error fetching blogs:", error.message);
+      } else {
+        setBlogs(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchDonations();
+  }, []);
+
   return (
-    <div className="container mx-auto pt-24 pb-8 p-6 min-h-screen">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Blog PLACEHOLDER</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600 mb-4">
-            <strong>Effective Date:</strong> 7/3/2025
-          </p>
-          <h2 className="text-lg font-semibold mt-4">1. Acceptance of Terms</h2>
-          <p>
-            By accessing or using BlockChair ("the Platform"), you agree to be bound by these Terms & Conditions and our Privacy Policy. If you do not agree, do not use the Platform.
-          </p>
-          <h2 className="text-lg font-semibold mt-4">2. Description of Service</h2>
-          <p>
-            BlockChair is a decentralized charity platform enabling users to:
-            <ul className="list-disc pl-5">
-              <li>View and donate to charitable projects using blockchain technology.</li>
-              <li>Analyze wallet security and validate charity authenticity.</li>
-              <li>Host and manage charity projects transparently.</li>
-            </ul>
-          </p>
-          <h2 className="text-lg font-semibold mt-4">3. User Responsibilities</h2>
-          <p>
-            You must be at least 18 years old or have parental consent to use the platform. You agree to use the Platform for lawful, charitable purposes only.
-          </p>
-          <h2 className="text-lg font-semibold mt-4">4. Donations</h2>
-          <p>
-            All donations are final and non-refundable. BlockChair does not guarantee the success or outcome of any project.
-          </p>
-          <h2 className="text-lg font-semibold mt-4">5. Wallet & Security</h2>
-          <p>
-            You are solely responsible for securing your crypto wallet. We provide tools like Wallet Security Analyzer but do not store or access your private keys.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="container mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-4">Browse Fundraisers</h2>
+      {loading ? (
+        <p>Loading blogs...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {blogs.map((blogs) => (
+            <BlogCard key={blogs.id} {...blogs} />
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default BlogPage;
