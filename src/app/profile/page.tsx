@@ -28,7 +28,7 @@ export default function SolanaBalancePage() {
     }, [publicKey, connected]);
 
     return (
-        <div className="p-8 max-w-lg mx-auto text-center">
+        <div className="p-8 max-w-5xl pt-24 pb-8 min-h-screen mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">Phantom Wallet Balance</h1>
             {connected && publicKey ? (
                 <div className="p-4 border rounded-lg shadow-lg">
