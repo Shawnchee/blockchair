@@ -38,4 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+next-env.d.tsecho "package.json" >> .gitignore
+echo "package-lock.json" >> .gitignore
+git add .gitignore
+git commit -m "Ignore package.json and package-lock.json"
+git push origin main
+

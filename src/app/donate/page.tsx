@@ -1,126 +1,66 @@
-"use client";
+"use client"; // Only needed in Next.js App Router
 
-import { useWallet } from "@solana/wallet-adapter-react";
-import {
-    LAMPORTS_PER_SOL,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    Connection,
-    clusterApiUrl,
-} from "@solana/web3.js";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import Link from "next/link";
 
-export default function DonatePage() {
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-    const { publicKey, sendTransaction } = useWallet();
-    const [recipient, setRecipient] = useState("");
-    const [amount, setAmount] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-
-    const handleDonate = async () => {
-        if (!publicKey) {
-            setMessage("❌ Please connect your wallet first.");
-            return;
-        }
-    
-        if (!recipient) {
-            setMessage("❌ Please enter a valid recipient address.");
-            return;
-        }
-    
-        try {
-            setLoading(true);
-            setMessage("");
-    
-            // ✅ Validate recipient address
-            const recipientPublicKey = new PublicKey(recipient);
-    
-            // ✅ Validate and convert amount
-            const amountInLamports = parseFloat(amount) * LAMPORTS_PER_SOL;
-            if (isNaN(amountInLamports) || amountInLamports <= 0) {
-                throw new Error("Invalid amount entered.");
-            }
-    
-            // ✅ Check wallet balance
-            const balance = await connection.getBalance(publicKey);
-            console.log("Wallet Balance (SOL):", balance / LAMPORTS_PER_SOL);
-    
-            if (balance < amountInLamports) {
-                throw new Error("Insufficient funds! You may need more SOL for transaction fees.");
-            }
-    
-            // ✅ Get latest blockhash for transaction
-            const { blockhash } = await connection.getLatestBlockhash();
-            console.log("Latest Blockhash:", blockhash);
-    
-            // ✅ Create transaction and explicitly set fee payer
-            const transaction = new Transaction().add(
-                SystemProgram.transfer({
-                    fromPubkey: publicKey,
-                    toPubkey: recipientPublicKey,
-                    lamports: amountInLamports,
-                })
-            );
-    
-            transaction.feePayer = publicKey;
-            transaction.recentBlockhash = blockhash;
-    
-            // ✅ Estimate transaction fee before sending
-            const feeEstimate = await connection.getFeeForMessage(transaction.compileMessage());
-            const estimatedFee = feeEstimate.value ?? 0; // Use 0 if fee estimate is null
-    
-            console.log("Estimated Transaction Fee (SOL):", estimatedFee / LAMPORTS_PER_SOL);
-    
-            // ✅ Ensure enough balance for transaction fee
-            if (balance < amountInLamports + estimatedFee) {
-                throw new Error("Insufficient funds after transaction fees! Try a smaller amount.");
-            }
-    
-            // ✅ Send transaction
-            const signature = await sendTransaction(transaction, connection);
-            setMessage(
-                `✅ Donation successful! [View Transaction](https://explorer.solana.com/tx/${signature}?cluster=devnet)`
-            );
-        } catch (error) {
-            console.error("Transaction error:", error);
-            setMessage(`❌ Transaction failed: ${(error as Error).message}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-
-    return (
-        <div style={{ textAlign: "center", marginTop: "50px" }}>
-            <h1>Donate with Solana</h1>
-            <p>Your donations help support our cause. Thank you!</p>
-
-            <input
-                type="text"
-                placeholder="Enter recipient address"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                style={{ width: "80%", padding: "10px", margin: "10px" }}
-            />
-            <input
-                type="number"
-                placeholder="Enter amount (SOL)"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                style={{ width: "80%", padding: "10px", margin: "10px" }}
-            />
-
-            <button
-                onClick={handleDonate}
-                disabled={loading}
-                style={{ padding: "10px 20px", fontSize: "16px" }}
-            >
-                {loading ? "Processing..." : `Donate ${amount || "0"} SOL`}
-            </button>
-
-            {message && <p style={{ marginTop: "20px", color: "green" }}>{message}</p>}
-        </div>
-    );
+interface DonationProps {
+  id: number;
+  title: string;
+  location: string;
+  cover_image: string;
+  total_amount: number;
 }
+
+const DonationCard: React.FC<DonationProps> = ({ id,title, location, cover_image, total_amount }) => (
+  <Link href={`/donate/${id}`} passHref>
+    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <img src={cover_image} alt={title} className="w-full h-40 object-cover" />
+      <div className="p-4">
+        <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full">{location}</span>
+        <h3 className="text-lg font-semibold mt-2">{title}</h3>
+        <p className="text-green-600 font-bold">
+          ${total_amount ? total_amount.toLocaleString() : "0"} raised
+        </p>
+      </div>
+    </div>
+  </Link>
+);
+
+const DonationPage = () => {
+  const [donations, setDonations] = useState<DonationProps[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchDonations = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from("charity_2").select("*");
+
+      if (error) {
+        console.error("Error fetching donations:", error.message);
+      } else {
+        setDonations(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchDonations();
+  }, []);
+
+  return (
+    <div className="container mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-4">Browse Fundraisers</h2>
+      {loading ? (
+        <p>Loading donations...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {donations.map((donation) => (
+            <DonationCard key={donation.id} {...donation} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DonationPage;
