@@ -58,47 +58,47 @@ export default function Footer() {
 
           {/* Column 2: Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Quick Links</h3>
+            <h3 className="text-xl font-bold">Help / Resources</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/impact" className="text-teal-100 hover:text-white transition-colors flex items-center">
-                  <ArrowRight className="mr-2 h-3 w-3" /> Impact Dashboard
+                <Link href="/getting-started" className="text-teal-100 hover:text-white transition-colors flex items-center">
+                  <ArrowRight className="mr-2 h-3 w-3" /> Getting Started
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/charity/view-project"
+                  href="/faq"
                   className="text-teal-100 hover:text-white transition-colors flex items-center"
                 >
-                  <ArrowRight className="mr-2 h-3 w-3" /> Browse Projects
+                  <ArrowRight className="mr-2 h-3 w-3" /> FAQ
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/charity/host"
+                  href="/terms-and-conditions"
                   className="text-teal-100 hover:text-white transition-colors flex items-center"
                 >
-                  <ArrowRight className="mr-2 h-3 w-3" /> Start a Project
+                  <ArrowRight className="mr-2 h-3 w-3" /> Terms & Conditions
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/security/wallet-analyzer"
+                  href="/privacy-policy"
                   className="text-teal-100 hover:text-white transition-colors flex items-center"
                 >
-                  <ArrowRight className="mr-2 h-3 w-3" /> Wallet Security
+                  <ArrowRight className="mr-2 h-3 w-3" /> Privacy Policy
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/security/company-check"
+                  href="/charity/blog"
                   className="text-teal-100 hover:text-white transition-colors flex items-center"
                 >
-                  <ArrowRight className="mr-2 h-3 w-3" /> Company Verification
+                  <ArrowRight className="mr-2 h-3 w-3" /> Blog
                 </Link>
               </li>
               <li>
-                <Link href="/mypet" className="text-teal-100 hover:text-white transition-colors flex items-center">
+                <Link href="/pets" className="text-teal-100 hover:text-white transition-colors flex items-center">
                   <ArrowRight className="mr-2 h-3 w-3" /> Virtual Pet
                 </Link>
               </li>
@@ -112,14 +112,14 @@ export default function Footer() {
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-teal-300 mr-2 mt-0.5 flex-shrink-0" />
                 <span className="text-teal-100">
-                  123 Blockchain Avenue, <br />
-                  Crypto District, <br />
-                  San Francisco, CA 94107
+                USM VHACK Innovation Center, <br />
+                Silicon Valley Tech District, <br />
+                11700 Gelugor, Penang, Malaysia.
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-teal-300 mr-2 flex-shrink-0" />
-                <span className="text-teal-100">+1 (555) 123-4567</span>
+                <span className="text-teal-100">+60 - 12345678</span>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 text-teal-300 mr-2 flex-shrink-0" />
@@ -159,26 +159,12 @@ export default function Footer() {
         <div className="border-t border-teal-700 my-8"></div>
 
         {/* Bottom Footer */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-sm text-teal-200">
+        <div className="flex flex-col md:flex-row justify-center items-center text-sm text-teal-200">
           <div className="mb-4 md:mb-0">
             <p>© {new Date().getFullYear()} BlockChair. All rights reserved.</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-            <Link href="/privacy-policy" className="hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/cookie-policy" className="hover:text-white transition-colors">
-              Cookie Policy
-            </Link>
-            <Link href="/faq" className="hover:text-white transition-colors">
-              FAQ
-            </Link>
           </div>
         </div>
-      </div>
     </footer>
   )
 }

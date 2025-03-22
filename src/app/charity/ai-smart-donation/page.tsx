@@ -1,5 +1,6 @@
 "use client"
 import { useState, useCallback, useEffect } from "react"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import type React from "react"
 
 interface CharityMatch {
@@ -194,7 +195,7 @@ function CharitySearch() {
   }
 
   return (
-    <div className="w-full p-6 border rounded-lg shadow-md bg-white">
+    <div className="container w-full p-6 border rounded-lg shadow-md bg-white">
       <h2 className="text-2xl font-semibold mb-4">Find Your Cause</h2>
 
       {/* Search input and button */}
@@ -218,7 +219,7 @@ function CharitySearch() {
           )}
         </div>
         <button
-          className="md:w-auto w-full bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
+          className="md:w-auto w-full bg-black text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors"
           onClick={handleSearch}
           disabled={isLoading}
         >
@@ -492,15 +493,20 @@ function CharitySearch() {
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center p-6 md:p-12 bg-gray-50">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Find Your Cause</h1>
-          <p className="text-xl text-gray-600">
-            Tell us what you care about, and we'll help you discover charities that align with your values.
-          </p>
-        </div>
-        <CharitySearch />
+    <main className="container min-h-screen flex flex-col items-center md:p-12 bg-gray-50">
+      <div className="max-w-5xl w-full pt-20 pb-8">
+          <CardHeader className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-8 rounded-lg mb-4">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold tracking-tight mb-4">Find Your Cause</h1>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                Tell us what you care about, and we'll help you discover charities that align with your values.
+              </p>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="p-0">
+            <CharitySearch />
+          </CardContent>
       </div>
     </main>
   )

@@ -13,7 +13,7 @@ interface DonationProps {
 }
 
 const DonationCard: React.FC<DonationProps> = ({ id,title, location, cover_image, total_amount }) => (
-  <Link href={`/charity/view-project/${id}`} passHref>
+  <Link href={`/charity/browse-projects/${id}`} passHref>
     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
       <img src={cover_image} alt={title} className="w-full h-40 object-cover" />
       <div className="p-4">
@@ -48,7 +48,7 @@ const DonationPage = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto pt-24 pb-8 min-h-screen">
       <h2 className="text-2xl font-bold mb-4">Browse Fundraisers</h2>
       {loading ? (
         <p>Loading donations...</p>

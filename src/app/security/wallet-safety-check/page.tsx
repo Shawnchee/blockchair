@@ -122,12 +122,11 @@ export default function WalletChecker() {
   const truncateSignature = (signature) => {
     return `${signature.substring(0, 6)}...${signature.substring(signature.length - 4)}`
   }
-
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl">
+    <div className="container mx-auto min-h-screen pt-24 pb-8 px-4 max-w-5xl">
       <Card className="shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-t-lg">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
+        <CardHeader className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-t-lg py-4">
+          <CardTitle className="text-2xl font-bold flex items-center gap-2 ">
             <Shield className="h-6 w-6" /> Solana Wallet Security Analyzer
           </CardTitle>
           <CardDescription className="text-slate-200">

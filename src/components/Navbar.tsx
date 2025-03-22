@@ -48,26 +48,34 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { name: "Impact", href: "/impact", icon: <BarChart3 className="w-4 h-4 mr-2"  /> },
+    { name: "Why Us", href: "/why-us", icon: <BarChart3 className="w-4 h-4 mr-2"  /> },
     {
       name: "Security",
       icon: <Shield className="w-4 h-4 mr-2 " />,
       dropdown: [
-        { name: "Wallet Security Analyzer", href: "/security/wallet-analyzer" },
-        { name: "Company Background Check", href: "/security/company-check" },
+        { name: "Wallet Safety Check", href: "/security/wallet-safety-check" },
+        { name: "Verify Organizations", href: "/security/verify-organizations" },
       ],
     },
     {
       name: "Charity",
       icon: <Heart className="w-4 h-4 mr-2" />,
       dropdown: [
-        { name: "View Project", href: "/charity/view-project" },
-        { name: "Host a Project", href: "/charity/host" },
+        { name: "Browse Project", href: "/charity/browse-projects" },
+        { name: "Start a Project", href: "/charity/start-project" },
+        { name: "AI Smart Donation", href: "/charity/ai-smart-donation" },
         { name: "Blog", href: "/charity/blog" },
       ],
     },
     { name: "Profile", href: "/profile", icon: <User className="w-4 h-4 mr-2" /> },
-    { name: "My Pet", href: "/mypet", icon: <PawPrint className="w-4 h-4 mr-2" /> },
+    {
+      name: "Pet",
+      icon: <PawPrint className="w-4 h-4 mr-2" />,
+      dropdown: [
+        { name: "My Pet", href: "/pets" },
+        { name: "Marketplace", href: "/pets/marketplace" },
+      ],
+    },
   ]
 
   return (
