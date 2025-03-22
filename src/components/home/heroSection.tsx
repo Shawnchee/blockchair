@@ -1,26 +1,25 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { motion, useInView } from "framer-motion"
 import { ArrowRight } from "lucide-react"
-import Link from "next/link"
 
-// CountUp component for animating numbers
-function CountUp({ 
-  start = 0, 
-  end, 
-  duration = 2.5, 
-  separator = ",", 
-  prefix = "", 
-  suffix = "" 
+// CountUp animation
+function CountUp({
+  start = 0,
+  end,
+  duration = 2.5,
+  separator = ",",
+  prefix = "",
+  suffix = ""
 }: {
-  start?: number;
-  end: number;
-  duration?: number;
-  separator?: string;
-  prefix?: string;
-  suffix?: string;
+  start?: number
+  end: number
+  duration?: number
+  separator?: string
+  prefix?: string
+  suffix?: string
 }) {
   const [count, setCount] = useState(start)
   const ref = useRef<HTMLSpanElement>(null)
@@ -56,6 +55,20 @@ function CountUp({
 }
 
 export default function HeroSection() {
+  const imageRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = (e: MouseEvent) => {
+    const rect = imageRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    imageRef.current!.style.transform = `rotateX(${-(y - 0.5) * 10}deg) rotateY(${(x - 0.5) * 10}deg)`
+  }
+
+  const resetTransform = () => {
+    if (imageRef.current) imageRef.current.style.transform = "rotateX(0deg) rotateY(0deg)"
+  }
+
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -92,53 +105,75 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
-            <Button
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-md text-lg h-auto group transition-all duration-300 ease-in-out hover:scale-105"
-            >
+            <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-md text-lg h-auto group transition-all duration-300 ease-in-out hover:scale-105 shadow-lg hover:shadow-emerald-300/50">
               Donate Now
               <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-3 gap-4 pt-10"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-10"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0, y: 40 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: { staggerChildren: 0.2 }
+              }
+            }}
           >
-            <div className="flex flex-col">
-              <h3 className="text-4xl md:text-5xl font-bold text-emerald-500">
-                <CountUp start={0} end={60} duration={2} suffix="+" />
+            <motion.div
+              className="flex flex-col items-center justify-center text-center bg-white/80 p-6 rounded-xl shadow-md hover:shadow-xl hover:bg-white transition duration-300 min-h-[130px]"
+              whileHover={{ scale: 1.05 }}
+            >
+              <h3 className="text-4xl md:text-3xl lg:text-5xl font-bold text-emerald-500">
+                <span className="whitespace-nowrap">
+                  <CountUp end={60} suffix="+" />
+                </span>
               </h3>
               <p className="text-gray-600 text-sm mt-1">fundraises per year</p>
-            </div>
+            </motion.div>
 
-            <div className="flex flex-col">
-              <h3 className="text-4xl md:text-5xl font-bold text-emerald-500">
-                <CountUp start={0} end={750} duration={2.5} prefix="$" suffix=" million+" />
+            <motion.div
+              className="flex flex-col items-center justify-center text-center bg-white/80 p-6 rounded-xl shadow-md hover:shadow-xl hover:bg-white transition duration-300 min-h-[130px]"
+              whileHover={{ scale: 1.05 }}
+            >
+              <h3 className="text-4xl items-center justify-center md:text-3xl lg:text-4xl font-bold text-emerald-500 leading-tight">
+                <CountUp end={750} prefix="$" suffix=" million+" />
               </h3>
               <p className="text-gray-600 text-sm mt-1">raised per year</p>
-            </div>
+            </motion.div>
 
-            <div className="flex flex-col">
-              <h3 className="text-4xl md:text-5xl font-bold text-emerald-500">
-                <CountUp start={0} end={250000} duration={3} separator="," suffix="+" />
+
+            <motion.div
+              className="flex flex-col items-center justify-center text-center bg-white/80 p-6 rounded-xl shadow-md hover:shadow-xl hover:bg-white transition duration-300 min-h-[130px]"
+              whileHover={{ scale: 1.05 }}
+            >
+              <h3 className="text-4xl md:text-2xl lg:text-4xl font-bold text-emerald-500">
+                <span className="whitespace-nowrap">
+                  <CountUp end={250000} separator="," suffix="+" />
+                </span>
               </h3>
               <p className="text-gray-600 text-sm mt-1">fundraiser per year</p>
-            </div>
+            </motion.div>
           </motion.div>
         </motion.div>
 
         <motion.div
-          className="relative"
+          className="relative perspective-1000"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="relative h-[500px] w-full rounded-lg overflow-hidden shadow-2xl">
+          <div
+            ref={imageRef}
+            className="relative h-[500px] w-full rounded-lg overflow-hidden shadow-2xl transition-transform duration-300"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={resetTransform}
+          >
             <img
               src="https://images.pexels.com/photos/3184436/pexels-photo-3184436.jpeg"
               alt="People making a difference"
@@ -151,11 +186,12 @@ export default function HeroSection() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, duration: 0.5 }}
+              whileHover={{ scale: 1.02 }}
             >
               <p className="text-sm font-medium">
                 "Every donation, no matter how small, has the power to change lives."
               </p>
-              <p className="text-xs text-emerald-600 mt-1">— BlockChair Community</p>
+              <p className="text-xs text-emerald-600 mt-1 animate-pulse">— BlockChair Community</p>
             </motion.div>
           </div>
         </motion.div>
