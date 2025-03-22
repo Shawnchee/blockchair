@@ -9,10 +9,18 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from supabase import create_client
+import os
+from dotenv import load_dotenv
+from supabase import create_client
+from pathlib import Path
 
-# Supabase credentials
-SUPABASE_URL = "https://jalcuslxbhoxepybolxw.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphbGN1c2x4YmhveGVweWJvbHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2Nzc1NzUsImV4cCI6MjA1NzI1MzU3NX0.4-BQ05RYlOUaoXT2YLDuPXRZpJhnET1vmaOX62C2z2Y"
+# Load .env variables
+env_path = Path(__file__).resolve().parent / ".env.local"
+load_dotenv(dotenv_path=env_path)
+
+# Get from environment
+SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 # Initialize Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
