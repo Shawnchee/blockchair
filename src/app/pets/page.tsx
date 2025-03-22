@@ -88,7 +88,7 @@ export default function PetPage() {
   const petImage = user.pet_owned ? getPet(user.pet_owned) : "/placeholder.svg"
 
   return (
-    <div className="container px-4 py-8 md:px-6 md:py-12 ml-auto mr-auto">
+    <div className="container px-4 pt-24 pb-8 min-h-screen md:px-6  ml-auto mr-auto">
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:gap-12">
         {/* Pet Display Area */}
         <div className="flex flex-col items-center">
