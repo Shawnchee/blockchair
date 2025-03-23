@@ -12,6 +12,7 @@ import dynamic from "next/dynamic"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import useMetaMask from "@/hooks/useMetaMask";
 
 
 const WalletButton = dynamic(() => import("./WalletButton"), { ssr: false })
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [session, setSession] = useState<Session | null>(null)
   const [scrolled, setScrolled] = useState(false)
+  const { walletAddress, connectWallet } = useMetaMask();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -48,7 +50,7 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { name: "Impact", href: "/impact", icon: <BarChart3 className="w-4 h-4 mr-2"  /> },
+    { name: "Impact", href: "/impact", icon: <BarChart3 className="w-4 h-4 mr-2" /> },
     {
       name: "Security",
       icon: <Shield className="w-4 h-4 mr-2 " />,
@@ -83,34 +85,34 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo - Left Section */}
           <div className="flex-shrink-0 flex items-center">
-  <Link href="/" className="flex items-center">
-    <div className="relative  w-auto">
-      <Image 
-        src="/logo-unscrolled.svg" // Update this path to your actual logo file
-        alt="BlockChair Logo"
-        width={80}
-        height={80}
-        className={cn(
-          "transition-opacity duration-300",
-          scrolled ? "opacity-100" : "opacity-100" // Adjust opacity if needed
-        )}
-        priority // Loads the logo with higher priority
-      />
-      
-      {/* Optional: Add a colored version for scrolled state */}
-      {scrolled && (
-        <Image 
-          src="/logo-scrolled.svg" // Optional: different version for scrolled state
-          alt="BlockChair Logo"
-          width={140}
-          height={40}
-          className="absolute inset-0 transition-opacity duration-300 opacity-100"
-          priority
-        />
-      )}
-    </div>
-  </Link>
-</div>
+            <Link href="/" className="flex items-center">
+              <div className="relative  w-auto">
+                <Image
+                  src="/logo-unscrolled.svg" // Update this path to your actual logo file
+                  alt="BlockChair Logo"
+                  width={80}
+                  height={80}
+                  className={cn(
+                    "transition-opacity duration-300",
+                    scrolled ? "opacity-100" : "opacity-100" // Adjust opacity if needed
+                  )}
+                  priority // Loads the logo with higher priority
+                />
+
+                {/* Optional: Add a colored version for scrolled state */}
+                {scrolled && (
+                  <Image
+                    src="/logo-scrolled.svg" // Optional: different version for scrolled state
+                    alt="BlockChair Logo"
+                    width={140}
+                    height={40}
+                    className="absolute inset-0 transition-opacity duration-300 opacity-100"
+                    priority
+                  />
+                )}
+              </div>
+            </Link>
+          </div>
 
           {/* Navigation Links - Middle Section (Desktop) */}
           <div className="hidden md:flex md:items-center md:space-x-1">
@@ -166,15 +168,27 @@ export default function Navbar() {
           <div className="hidden md:flex md:items-center md:space-x-3">
             {session ? (
               <div className="flex items-center gap-2">
-                <div className="wallet-adapter-button-container ">
-                  <WalletMultiButton className="!bg-teal-700 hover:!bg-teal-800 !transition-colors " />
+                {/* <div className="wallet-adapter-button-container ">
+                    <WalletMultiButton className="!bg-teal-700 hover:!bg-teal-800 !transition-colors " />
+                  </div> */}
+                <div className="wallet-adapter-button-container flex justify-end px-4">
+                  <button
+                    onClick={connectWallet}
+                    className={`px-4 py-2 rounded-lg transition-colors 
+      ${walletAddress ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-500 hover:bg-purple-600"}
+      text-white font-semibold shadow-md`}
+                    style={{ width: "auto", minWidth: "150px" }} // Prevents full width
+                  >
+                    {walletAddress ? `Connected: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connect MetaMask"}
+                  </button>
                 </div>
+
                 <Button
-                onClick={handleSignOut}
-                className="cursor-pointer p-[24px] mx-4 bg-[#512DA8]"
-              >
-                Log Out
-              </Button>
+                  onClick={handleSignOut}
+                  className="cursor-pointer p-[24px] mx-4 bg-[#512DA8]"
+                >
+                  Log Out
+                </Button>
               </div>
             ) : (
               <Link href="/authentication/login">
@@ -192,11 +206,11 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
-            {session && (
-              <div className="mr-2 wallet-adapter-button-container">
-                <WalletMultiButton className="!bg-teal-700 hover:!bg-teal-800 !transition-colors !py-0 !h-9" />
-              </div>
-            )}
+            {/* {session && (
+                <div className="mr-2 wallet-adapter-button-container">
+                  <WalletMultiButton className="!bg-teal-700 hover:!bg-teal-800 !transition-colors !py-0 !h-9" />
+                </div>
+              )} */}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={cn(
@@ -278,12 +292,12 @@ export default function Navbar() {
           {/* Mobile Auth Buttons */}
           <div className="pt-4 pb-3 border-t border-teal-400/20">
             {session ? (
-                            <Button
-                            onClick={handleSignOut}
-                            className="cursor-pointer p-[24px] mx-4 bg-[#512DA8]"
-                          >
-                            Log Out
-                          </Button>
+              <Button
+                onClick={handleSignOut}
+                className="cursor-pointer p-[24px] mx-4 bg-[#512DA8]"
+              >
+                Log Out
+              </Button>
             ) : (
               <Link href="/authentication/login" className="block w-full" onClick={() => setIsOpen(false)}>
                 <Button
