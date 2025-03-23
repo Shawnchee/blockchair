@@ -6,7 +6,7 @@ import CampaignSection from "@/components/home/campaignSection";
 
 function Home() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen px-8 py-4">
       <HeroSection />
       <OurApproachSection />
       <DonationFlowSection />
