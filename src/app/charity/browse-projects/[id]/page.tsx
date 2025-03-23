@@ -51,7 +51,7 @@ const DonationDetails: React.FC = () => {
       const { data: milestonesData, error: milestonesError } = await supabase
         .from("milestone")
         .select("*")
-        .eq("charity_id", id);
+        .eq("charity_2_id", id);
 
       const { data: transactionsData, error: transactionsError } = await supabase
         .from("transaction_history")
