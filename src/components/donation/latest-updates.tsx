@@ -44,7 +44,7 @@ const updates = [
   },
 ]
 
-export function LatestUpdates() {
+export function LatestUpdates({ milestoneTransactions }) {
   return (
     <section id="latest-updates">
       <Card className="bg-gray-900 border-gray-800">
@@ -62,65 +62,28 @@ export function LatestUpdates() {
               <TabsTrigger value="impact">Impact Stories</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="space-y-6">
-              {updates.map((update) => (
-                <div key={update.id} className="flex gap- p-4 border border-gray-700 rounded-lg bg-gray-800">
-                  <div className="mt-1">{update.icon}</div>
-                  <div className="space-y-2 flex-auto px-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-neutral-100">{update.title}</h3>
-                      <Badge variant="outline" className="ml-auto text-primary">
-                        {update.type}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <CalendarIcon className="mr-1 h-3 w-3" />
-                      {new Date(update.date).toLocaleDateString()}
-                    </div>
-                    <p className="text-sm text-neutral-400">{update.description}</p>
-                  </div>
-                </div>
-              ))}
-            </TabsContent>
-
+            {/* Milestone Transactions Tab */}
             <TabsContent value="milestones" className="space-y-6">
-              {updates
-                .filter((update) => update.type === "milestone")
-                .map((update) => (
-                  <div key={update.id} className="flex gap-4 p-4 border border-gray-700 rounded-lg bg-gray-800">
-                    <div className="mt-1">{update.icon}</div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium  text-neutral-100">{update.title}</h3>
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <CalendarIcon className="mr-1 h-3 w-3" />
-                        {new Date(update.date).toLocaleDateString()}
-                      </div>
-                      <p className="text-sm text-neutral-400">{update.description}</p>
+              {milestoneTransactions.length > 0 ? (
+                milestoneTransactions.map((tx, index) => (
+                  <div key={index} className="flex gap-4 p-4 border border-gray-700 rounded-lg bg-gray-800">
+                    <div className="mt-1">
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div className="space-y-2 flex-auto px-2">
+                      <h3 className="font-medium text-neutral-100">Milestone: {tx.name}</h3>
+                      <p className="text-sm text-neutral-400">
+                        <strong>Transaction Hash:</strong> {tx.txHash}
+                      </p>
+                      <p className="text-sm text-neutral-400">
+                        <strong>End Wallet Address:</strong> {tx.wallet}
+                      </p>
                     </div>
                   </div>
-                ))}
-            </TabsContent>
-
-            <TabsContent value="impact" className="space-y-6">
-              {updates
-                .filter((update) => update.type === "impact")
-                .map((update) => (
-                  <div key={update.id} className="flex gap-4 p-4 border border-gray-700 rounded-lg bg-gray-800">
-                    <div className="mt-1">{update.icon}</div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-neutral-100">{update.title}</h3>
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <CalendarIcon className="mr-1 h-3 w-3" />
-                        {new Date(update.date).toLocaleDateString()}
-                      </div>
-                      <p className="text-sm text-neutral-400">{update.description}</p>
-                    </div>
-                  </div>
-                ))}
+                ))
+              ) : (
+                <p className="text-center text-gray-400">No milestone transactions available.</p>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

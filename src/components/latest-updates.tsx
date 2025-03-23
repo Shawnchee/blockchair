@@ -11,7 +11,6 @@ interface MilestoneTransaction {
   name: string
   targetAmount: number
   txHash: string
-  timestamp: string
   wallet: string
 }
 
@@ -20,7 +19,7 @@ interface LatestUpdatesProps {
   campaignTitle: string
 }
 
-export default function LatestUpdates({ milestoneTransactions = [], campaignTitle = "Campaign" }: LatestUpdatesProps) {
+export default function LatestUpdates({ milestoneTransactions, campaignTitle }: LatestUpdatesProps) {
   // Sample impact data - in a real app, this would come from your database
   const impactStories = [
     {
@@ -48,6 +47,8 @@ export default function LatestUpdates({ milestoneTransactions = [], campaignTitl
       category: "healthcare",
     },
   ]
+
+  console.log("info",milestoneTransactions);
 
   return (
     <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
@@ -93,7 +94,7 @@ export default function LatestUpdates({ milestoneTransactions = [], campaignTitl
               </div>
             )}
           </TabsContent>
-
+            
           {/* Milestone Transfers Tab */}
           <TabsContent value="milestones" className="space-y-4">
             {milestoneTransactions.length > 0 ? (
@@ -111,19 +112,20 @@ export default function LatestUpdates({ milestoneTransactions = [], campaignTitl
                         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Completed</Badge>
                       </div>
                       <p className="text-sm">
-                        <span className="font-medium">{milestone.targetAmount.toFixed(4)} ETH</span> has been
-                        transferred to the recipient wallet
+                        <span className="font-medium">
+                          {(Number(milestone.targetAmount) / 1e18).toFixed(4)} ETH
+                        </span>
+                        has been transferred to the recipient wallet
                       </p>
-                      <div className="flex flex-col space-y-1 text-xs text-muted-foreground">
-                        <div className="flex items-center">
-                          <Calendar className="mr-1 h-3 w-3" />
-                          {milestone.timestamp}
-                        </div>
+
+                      {milestone.wallet && (
                         <div className="flex items-center">
                           <span className="font-mono">
                             Recipient: {milestone.wallet.slice(0, 6)}...{milestone.wallet.slice(-4)}
                           </span>
                         </div>
+                      )}
+                      {milestone.txHash && (
                         <Link
                           href={`https://sepolia.etherscan.io/tx/0x${milestone.txHash.slice(2)}`}
                           target="_blank"
@@ -132,17 +134,21 @@ export default function LatestUpdates({ milestoneTransactions = [], campaignTitl
                           <span className="font-mono">View transaction</span>
                           <ExternalLink className="ml-1 h-3 w-3" />
                         </Link>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
+
               ))
             ) : (
               <div className="rounded-lg border bg-card p-6 text-center">
-                <p className="text-muted-foreground">No milestone transfers have been completed yet.</p>
+                <p className="text-muted-foreground">
+                  No milestone transfers have been completed yet.
+                </p>
               </div>
             )}
           </TabsContent>
+
         </Tabs>
       </CardContent>
     </Card>

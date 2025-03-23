@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "../../../../lib/supabaseClient"
 import { ethers } from "ethers"
+import { hexlify } from "ethers";
+
 import Link from "next/link"
 import { ArrowRight, Check, ExternalLink, InfoIcon, LineChart, Loader2, X } from "lucide-react"
 
@@ -298,37 +300,65 @@ const DonationDetails: React.FC = () => {
     }
   }, [donation])
 
+
+
+
+
   // Add this function to fetch milestone transactions with their hashes
   const fetchMilestoneTransactions = async () => {
-    if (!contract) return []
-
+    if (!contract) return [];
+  
     try {
-      const milestonesCount = await contract.getMilestonesCount()
-      const transactions = []
-
+      const milestonesCount = await contract.getMilestonesCount();
+      console.log("Milestones count:", milestonesCount.toString()); 
+      const transactions = [];
+  
       for (let i = 0; i < milestonesCount; i++) {
-        const milestone = await contract.getMilestone(i)
-        const completed = milestone[4] // completed at index 4
-        const txHash = milestone[5] // txHash at index 5
-
+        const milestone = await contract.getMilestone(i);
+        console.log(`Milestone ${i}:`, milestone); // Log each milestone
+        const completed = milestone[4]; // completed at index 3
+        const txHash = milestone[5]; // txHash at index 4
+        const wallet = milestone[1]; // wallet address at index 0
+        const targetAmount = milestone[2];
+  
+        // Ensure the transaction hash is valid (not empty)
         if (completed && txHash && txHash !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
+          console.log("transactions are PUSHEDDDD")
           transactions.push({
             index: i,
-            name: milestonesName[i]?.milestone_name || `Milestone ${i + 1}`,
-            targetAmount: Number(ethers.formatEther(milestone[2])), // targetAmount at index 2
-            txHash: txHash,
-            timestamp: new Date().toLocaleDateString(), // This would ideally come from the blockchain
-            wallet: milestone[1], // wallet at index 1
-          })
+            targetAmount: targetAmount,
+            name: milestonesName[i]?.milestone_name || `Milestone ${i + 1}`, // Fetch from useState variable
+            txHash: hexlify(txHash),
+            wallet: wallet, // Extract wallet address
+          });
         }
       }
-
-      return transactions
+  
+      // Pass the data to LatestUpdate component
+      return transactions;
     } catch (error) {
-      console.error("Error fetching milestone transactions:", error)
-      return []
+      console.error("Error fetching milestone transactions:", error);
+      return [];
     }
-  }
+  };
+
+  useEffect(() => {
+    console.log("Contract: " , contract)
+    if (!contract) return; // Wait until contract is initialized
+  
+    console.log("Fetching transactions...");
+    const loadTransactions = async () => {
+      const transactions = await fetchMilestoneTransactions();
+      setMilestoneTransactions(transactions);
+      console.log("Transactions to be checked:", transactions);
+    };
+  
+    loadTransactions();
+  }, [contract]); // Run when contract is updated
+  
+
+
+  
 
   // Update the fetchContractData function to correctly get the total donations and target amount
   const fetchContractData = async () => {
@@ -431,14 +461,6 @@ const DonationDetails: React.FC = () => {
         setMilestonesOnChain(milestones)
       } catch (error) {
         console.error("Error fetching milestones for display:", error)
-      }
-
-      // Add this inside your fetchContractData function, right after fetching milestones
-      try {
-        const transactions = await fetchMilestoneTransactions()
-        setMilestoneTransactions(transactions)
-      } catch (error) {
-        console.error("Error fetching milestone transactions:", error)
       }
 
       // 7️⃣ Set final state values
