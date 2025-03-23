@@ -40,6 +40,8 @@
     "ai": "^4.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "ethers": "^6.13.5",
     "dayjs": "^1.11.13",
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.479.0",
@@ -58,6 +60,7 @@
     "swiper": "^11.2.6",
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
+    "web3": "^4.16.0",
     "whois-json": "^2.0.4",
     "zod": "^3.24.2"
   },
