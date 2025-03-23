@@ -5,7 +5,8 @@ import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, X, ArrowRight, Calendar, Users, Heart } from "lucide-react"
+import { CheckCircle, X, ArrowRight, Calendar, Users, Heart, Sparkles } from "lucide-react"
+import AISmartDonation from "@/components/ai-smart-donation"
 import { Button } from "@/components/ui/button"
 import supabase from "@/utils/supabase/client"
 
@@ -209,9 +210,22 @@ const DonationPage = () => {
           ))}
         </div>
       )}
+
+      {/* Personalized Recommendations Section */}
+      <div className="mt-16 bg-teal-50 rounded-lg p-8 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="bg-teal-100 rounded-full p-3">
+            <Sparkles className="h-8 w-8 text-teal-600" />
+          </div>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-3">Don't know what to donate to?</h3>
+        <p className="text-gray-600 mb-6 max-w-lg mx-auto">
+          Let us know your interests and values, and we'll give you personalized charity recommendations.
+        </p>
+      <AISmartDonation />
+      </div>
     </div>
   )
 }
 
 export default DonationPage
-

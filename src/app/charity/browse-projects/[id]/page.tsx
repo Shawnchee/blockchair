@@ -562,7 +562,7 @@ const DonationDetails: React.FC = () => {
   const milestonesName = milestones
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen pt-24 pb-8 bg-zinc-50 dark:bg-zinc-950">
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-[1fr_350px]">
           <div className="space-y-8">
