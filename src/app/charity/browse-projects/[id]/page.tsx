@@ -118,6 +118,10 @@ const DonationDetails: React.FC = () => {
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
           })
+      const { data: milestonesData, error: milestonesError } = await supabase
+        .from("milestone")
+        .select("*")
+        .eq("charity_2_id", id);
 
           setMilestones([
             {
