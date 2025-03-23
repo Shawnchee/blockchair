@@ -15,9 +15,10 @@ interface DonationProps {
   location: string
   cover_image: string
   total_amount: number
+  organization_name: string
 }
 
-const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_image, total_amount }) => (
+const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_image, total_amount, organization_name }) => (
   <Link href={`/charity/browse-projects/${id}`} passHref>
     <div className="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       <div className="relative">
@@ -32,6 +33,10 @@ const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_imag
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold mt-2 line-clamp-2">{title}</h3>
+        <p className="text-gray-600 text-sm mb-2 flex items-center">
+          <Users className="h-3 w-3 mr-1" />
+          {organization_name || "Anonymous Organization"}
+        </p>
         <p className="text-teal-600 font-bold mt-2 flex items-center">
           <Heart className="h-4 w-4 mr-1 fill-teal-600 stroke-teal-600" />$
           {total_amount ? total_amount.toLocaleString() : "0"} goal
@@ -139,7 +144,6 @@ const DonationPage = () => {
     const fetchDonations = async () => {
       setLoading(true)
       const { data, error } = await supabase.from("charity_2").select("*")
-
       if (error) {
         console.error("Error fetching donations:", error.message)
       } else {

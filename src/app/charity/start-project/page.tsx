@@ -53,6 +53,7 @@ const formSchema = z.object({
   totalAmount: z
     .string()
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, { message: "Please enter a valid amount greater than 0" }),
+  organizationName: z.string().min(3, "Organization name must be at least 3 characters"), // New field
   location: z.string().min(3, "Location must be at least 3 characters"),
   milestones: z
     .array(
@@ -111,6 +112,7 @@ export default function StartProjectPage() {
       contactInfo: "",
       totalAmount: "",
       location: "",
+      organizationName: "", // New field
       milestones: [{ title: "", targetAmount: "", targetPercentage: 100 ,companyName: "",
         walletAddress: "", }],
       // solutions: [{ title: "", description: "" }],
@@ -242,6 +244,7 @@ export default function StartProjectPage() {
             contact_info: values.contactInfo,
             total_amount: Number(values.totalAmount),
             location: values.location,
+            organization_name: values.organizationName,
             // organization_id: session.user.id,
             // status: "pending", // Projects start as pending until approved
           },
@@ -328,6 +331,22 @@ export default function StartProjectPage() {
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-6">
+                      <FormField
+  control={form.control}
+  name="organizationName"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Organization Name</FormLabel>
+      <FormControl>
+        <Input placeholder="Enter the name of your organization" {...field} />
+      </FormControl>
+      <FormDescription>
+        Provide the name of the organization managing this project.
+      </FormDescription>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
                         {/* Project Title */}
                         <FormField
                           control={form.control}
@@ -431,8 +450,8 @@ export default function StartProjectPage() {
                                 <Button
                                   type="button"
                                   variant="link"
-                                  className="text-yellow-600 font-medium flex items-center p-0 h-auto"
-                                  onClick={() => router.push("/ai-smart")}
+                                  className="text-yellow-600 font-medium flex items-center p-0 h-auto cursor-pointer"
+                                  onClick={() => router.push("/charity/ai-smart-donation")}
                                 >
                                   <LightbulbIcon className="h-4 w-4 mr-1" />
                                   Need help with fundraising goals?
@@ -983,7 +1002,7 @@ export default function StartProjectPage() {
               </p>
               <div className="mt-2">
                 <Button variant="link" className="p-0 h-auto text-teal-600" asChild>
-                  <Link href="/ai-smart">
+                  <Link href="/charity/ai-smart-donation">
                     Need AI assistance with your fundraising goals? <ExternalLink className="h-3 w-3 ml-1" />
                   </Link>
                 </Button>
