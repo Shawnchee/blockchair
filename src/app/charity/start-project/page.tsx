@@ -54,6 +54,7 @@ const formSchema = z.object({
     .string()
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, { message: "Please enter a valid amount greater than 0" }),
   organizationName: z.string().min(3, "Organization name must be at least 3 characters"), // New field
+  websiteurl: z.string().url().optional().or(z.literal("")),
   location: z.string().min(3, "Location must be at least 3 characters"),
   milestones: z
     .array(
@@ -113,6 +114,7 @@ export default function StartProjectPage() {
       totalAmount: "",
       location: "",
       organizationName: "", // New field
+      websiteurl: "",
       milestones: [{ title: "", targetAmount: "", targetPercentage: 100 ,companyName: "",
         walletAddress: "", }],
       // solutions: [{ title: "", description: "" }],
@@ -214,6 +216,7 @@ export default function StartProjectPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
 
+    
     try {
       // Validate that milestone total doesn't exceed 99% of total amount (1% admin fee)
       const maxAllowedAmount = totalAmountValue * 0.99
@@ -245,6 +248,7 @@ export default function StartProjectPage() {
             total_amount: Number(values.totalAmount),
             location: values.location,
             organization_name: values.organizationName,
+            websiteurl: values.websiteurl,
             // organization_id: session.user.id,
             // status: "pending", // Projects start as pending until approved
           },
@@ -451,7 +455,7 @@ export default function StartProjectPage() {
                                   type="button"
                                   variant="link"
                                   className="text-yellow-600 font-medium flex items-center p-0 h-auto cursor-pointer"
-                                  onClick={() => router.push("/charity/ai-smart-donation")}
+                                  onClick={() => router.push("/analyse")}
                                 >
                                   <LightbulbIcon className="h-4 w-4 mr-1" />
                                   Need help with fundraising goals?
@@ -522,7 +526,27 @@ export default function StartProjectPage() {
                               <FormMessage />
                             </FormItem>
                           )}
-                        />
+                          />
+                          {/* Website URL */}
+                            <FormField
+                            control={form.control}
+                            name="websiteurl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Website URL</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter the official website URL for this project"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription>
+                                  Provide a link to your organization's website or a page with more details about this project.
+                                </FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                            />
                       </div>
                     </div>
 
@@ -632,24 +656,75 @@ export default function StartProjectPage() {
                 </TabsContent>
 
                 <TabsContent value="milestones">
-                  <div className="space-y-8">
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <div className="flex items-start">
-                        <Info className="h-5 w-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
-                        <div>
-                          <h3 className="font-medium text-gray-900">About Milestones</h3>
-                          <p className="text-sm text-gray-600">
-                            Milestones help donors understand how their contributions will be used at different funding
-                            levels. Each milestone should represent a specific goal or achievement that will be unlocked
-                            when the target amount is reached.
-                          </p>
-                          <p className="text-sm text-gray-600 mt-2 font-medium">
-                            Note: Total milestone amounts cannot exceed 99% of your fundraising goal. 1% is reserved for
-                            platform administration fees.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                <div className="space-y-8">
+    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-yellow-200 rounded-lg overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="bg-yellow-100 px-5 py-3 border-b border-yellow-200">
+        <div className="flex items-center">
+          <Info className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0" />
+          <h3 className="font-semibold text-gray-800">About Milestones</h3>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="p-5">
+        <p className="text-gray-700 leading-relaxed">
+          Milestones help donors understand how their contributions will be used at different funding levels. Each
+          milestone should represent a specific goal or achievement that will be unlocked when the target amount is
+          reached.
+        </p>
+        
+        <div className="mt-4 p-4 bg-white rounded-md border border-yellow-100">
+          <p className="font-medium text-gray-800 flex items-center">
+            <span className="flex h-6 w-6 rounded-full bg-yellow-100 mr-2 items-center justify-center">
+              <span className="text-yellow-600 text-xs">%</span>
+            </span>
+            Administration Fee Structure
+          </p>
+          
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-amber-50 rounded-md p-3 flex items-center">
+              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-semibold text-amber-700">5%</span>
+              </div>
+              <span className="text-sm text-gray-700">Less than $5,000</span>
+            </div>
+            
+            <div className="bg-amber-50 rounded-md p-3 flex items-center">
+              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-semibold text-amber-700">3%</span>
+              </div>
+              <span className="text-sm text-gray-700">$5,001 - $20,000</span>
+            </div>
+            
+            <div className="bg-amber-50 rounded-md p-3 flex items-center">
+              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-semibold text-amber-700">2%</span>
+              </div>
+              <span className="text-sm text-gray-700">$20,001 - $100,000</span>
+            </div>
+            
+            <div className="bg-amber-50 rounded-md p-3 flex items-center">
+              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3 flex-shrink-0">
+                <span className="font-semibold text-amber-700">1%</span>
+              </div>
+              <span className="text-sm text-gray-700">Above $100,000</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-md p-4">
+          <p className="text-sm text-gray-700 font-medium flex items-center">
+            <AlertCircle className="h-4 w-4 text-blue-500 mr-2" />
+            Important Note
+          </p>
+          <p className="text-sm text-gray-600 mt-1">
+            Total milestone amounts cannot exceed your fundraising goal minus the administration fee. Ensure that your milestones' total amount accounts for the applicable administration fee.
+          </p>
+        </div>
+      </div>
+    </div>
+
 
                     {/* Milestone Summary */}
                     <Card className="border-gray-200">
@@ -678,7 +753,7 @@ export default function StartProjectPage() {
                           </div>
 
                           <div className="flex justify-between text-sm mt-2">
-                            <span>Administration Fee (1%):</span>
+                            <span>Administration Fee :</span>
                             <span className="text-gray-600">${(totalAmountValue * 0.01).toLocaleString()}</span>
                           </div>
                         </div>
@@ -1002,7 +1077,7 @@ export default function StartProjectPage() {
               </p>
               <div className="mt-2">
                 <Button variant="link" className="p-0 h-auto text-teal-600" asChild>
-                  <Link href="/charity/ai-smart-donation">
+                  <Link href="/analyse">
                     Need AI assistance with your fundraising goals? <ExternalLink className="h-3 w-3 ml-1" />
                   </Link>
                 </Button>
