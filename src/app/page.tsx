@@ -2,7 +2,7 @@ import HeroSection from "@/components/home/heroSection";
 import OurApproachSection from "@/components/home/our-approach-section";
 import DonationFlowSection from "@/components/home/donation-flow-section";
 import NewsletterSection from "@/components/home/newsletter";
-import CampaignSection from "@/components/home/campaignSection";
+import GettingStartedSection from "@/components/home/gettingStartedSection";
 
 function Home() {
   return (
@@ -11,6 +11,7 @@ function Home() {
       <OurApproachSection />
       <DonationFlowSection />
       <NewsletterSection />
+      <GettingStartedSection/>
     </main>
   );
 }

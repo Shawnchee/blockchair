@@ -76,7 +76,7 @@ export default function NewsSection() {
   }
 
   return (
-    <section className="w-full py-16 bg-gray-50">
+    <section className="w-full py-16 bg-gray-100">
       <div className="container mx-auto px-4">
         <motion.h2
           className="text-3xl font-bold text-center mb-10"
