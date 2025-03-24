@@ -16,8 +16,13 @@ import {
   LineChart,
   Loader2,
   X,
-  AlertTriangle,
+  Shield,
   DollarSign,
+  Building2,
+  AlertTriangle,
+  CheckCircle,
+  Globe,
+  Building
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -45,6 +50,8 @@ interface Donation {
   cover_image: string
   total_amount: number
   target_amount: number
+  organization_name: string
+  websiteurl: string
   smart_contract_address: string
   contract_abi: object[]
   problem_statement?: string
@@ -143,6 +150,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             cover_image: "/placeholder.svg?height=400&width=800",
             total_amount: 0,
             target_amount: 10,
+            organization_name: "Sample Organization",
+            websiteurl: "https://example.org", 
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
             problem_statement: defaultProblemStatement,
@@ -187,6 +196,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             cover_image: "/placeholder.svg?height=400&width=800",
             total_amount: 0,
             target_amount: 10,
+            organization_name: "Sample Organization",
+            websiteurl: "https://example.org",
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
             problem_statement: defaultProblemStatement,
@@ -215,6 +226,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
           cover_image: "/placeholder.svg?height=400&width=800",
           total_amount: 0,
           target_amount: 10,
+          organization_name: "Sample Organization",
+          websiteurl: "https://example.org",
           smart_contract_address: "0x0000000000000000000000000000000000000000",
           contract_abi: [],
           problem_statement: defaultProblemStatement,
@@ -634,7 +647,34 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
   const milestonesName = milestones
 
   return (
-    <div className="min-h-screen pt-24 pb-8 px-4 bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen pt-24 pb-8 px-6 bg-zinc-50 dark:bg-zinc-950">
+      {donation.organization_name && (
+  <div className="container mx-auto px-6 pt-5">
+    <div className="flex items-center flex-wrap gap-3 mb-4 p-4 rounded-lg border border-emerald-400 dark:border-teal-700 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-sm">
+      <div className="flex items-center">
+        <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2 rounded-full mr-3">
+          <Building className="h-5 w-5 text-emerald-300" />
+        </div>
+        <div>
+          <div className="text-xs text-emerald-100 mb-0.5 font-medium">Organization</div>
+          <span className="font-semibold text-white">{donation.organization_name}</span>
+        </div>
+      </div>
+      
+      {donation.websiteurl && (
+        <Link 
+          href={donation.websiteurl} 
+          target="_blank" 
+          className="flex items-center ml-auto px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
+        >
+          <Globe className="h-4 w-4 mr-2 text-emerald-300" />
+          <span>{donation.websiteurl.replace(/^https?:\/\//, '')}</span>
+          <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
+        </Link>
+      )}
+    </div>
+  </div>
+)}
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-[1fr_350px]">
           <div className="space-y-8">
@@ -949,7 +989,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
           </div>
 
           <div className="space-y-6">
-            <Card className="sticky top-6 rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <Card className="sticky top-20 rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <CardHeader>
                 <CardTitle className="text-xl font-medium">Contribute</CardTitle>
                 <CardDescription>Support this campaign with ETH</CardDescription>
@@ -1076,6 +1116,51 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
           </div>
         </div>
       </div>
+      {/* Security and Verification Section */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+          {/* Wallet Security Check */}
+          <div className="bg-white rounded-lg shadow-md p-6 border border-yellow-100">
+            <div className="flex items-start">
+              <div className="bg-yellow-50 p-3 rounded-full mr-4">
+                <Shield className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Wallet Security Check</h3>
+                <p className="text-gray-600 mb-4">
+                  Don't know if the wallet is safe? Check their transaction and safety using our AI wallet security
+                  analyzer.
+                </p>
+                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" asChild>
+                  <Link href="/security/wallet-safety-check">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Analyze Wallet Security
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Company Verification */}
+          <div className="bg-white rounded-lg shadow-md p-6 border border-teal-100">
+            <div className="flex items-start">
+              <div className="bg-teal-50 p-3 rounded-full mr-4">
+                <Building2 className="h-6 w-6 text-teal-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Organization Verification</h3>
+                <p className="text-gray-600 mb-4">
+                  Don't know if the company is verified? Run a comprehensive background check on the organization.
+                </p>
+                <Button className="bg-teal-500 hover:bg-teal-600 text-white" asChild>
+                  <Link href="/security/verify-organizations">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Verify Organization
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       {/* Donation Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
