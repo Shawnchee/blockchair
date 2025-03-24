@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { supabase } from "../../../../lib/supabaseClient"
 import { ethers } from "ethers"
-import { hexlify } from "ethers";
+import { hexlify } from "ethers"
 
 import Link from "next/link"
 import {
@@ -16,13 +16,10 @@ import {
   LineChart,
   Loader2,
   X,
-  Shield,
-  Building2,
   AlertTriangle,
-  CheckCircle,
-  Globe,
-  Building
+  DollarSign,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -49,9 +46,9 @@ interface Donation {
   total_amount: number
   target_amount: number
   smart_contract_address: string
-  organization_name: string
-  websiteurl: string
   contract_abi: object[]
+  problem_statement?: string
+  organization_info?: string
 }
 
 interface Milestone {
@@ -59,6 +56,7 @@ interface Milestone {
   charity_id: string
   milestone_name: string
   target_amount: number
+  company_name: string
   funds_raised: number
   status: "pending" | "completed"
 }
@@ -89,6 +87,12 @@ const DonationDetails: React.FC = () => {
   const [milestonesOnChain, setMilestonesOnChain] = useState<any[]>([])
   const [contract, setContract] = useState<any>(null)
   const [contractCreationDate, setContractCreationDate] = useState<string>("")
+  const [ethToMyrRate, setEthToMyrRate] = useState<number>(12500) // Default rate, will be updated
+  const [myrValues, setMyrValues] = useState({
+    totalRaised: 0,
+    targetAmount: 0,
+    remainingAmount: 0,
+  })
 
   // New states for modal and donation process
   const [modalOpen, setModalOpen] = useState(false)
@@ -103,10 +107,17 @@ const DonationDetails: React.FC = () => {
   // Add this state to store milestone transactions
   const [milestoneTransactions, setMilestoneTransactions] = useState([])
 
+  // Sample problem statement and organization info
+  const defaultProblemStatement = `Digital exclusion is a barrier preventing individuals from accessing opportunities and seeking financial support. Research shows people from the lowest socio-economic groups are unable to apply for public aid as they lack access to the internet, cell phones and computers, nor have the knowledge of how to use the devices. During the Covid-19 pandemic, more than 20% of people were unable to seek support due to digital exclusion.
+
+Most vulnerable homeless people are disadvantaged by this even further, as there is an absence of public digital centers in developing countries. This leads to limited access to computers and with it the opportunities and aid it brings, as well as contributing to losing connection with family and friends.`
+
+  const defaultOrganizationInfo = `Our organization, founded in 2018, seeks to educate homeless and socially vulnerable people in urban areas. Among various forms of support, we provide professional training for people in vulnerable conditions, with an emphasis on personal development and generating a source of income.`
+
   useEffect(() => {
     if (donation?.contract_abi && donation?.smart_contract_address) {
       try {
-        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/9fbb6c926b6942b1931e85244e9964af")
+        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/b7624d9f81c5486c88a86ca6f4b3ed44")
         const contract = new ethers.Contract(donation.smart_contract_address, donation.contract_abi, provider)
         setContract(contract)
       } catch (error) {
@@ -127,39 +138,20 @@ const DonationDetails: React.FC = () => {
           // Use sample data when Supabase credentials are missing
           setDonation({
             id: id as string,
-            title: "Sample Donation Campaign",
-            description: "This is a sample donation campaign for development",
-            cover_image: "/placeholder.svg",
+            title: "Digital Inclusion Initiative",
+            description: "Providing digital access and education to vulnerable communities",
+            cover_image: "/placeholder.svg?height=400&width=800",
             total_amount: 0,
             target_amount: 10,
-            organization_name: "Sample Organization",
-            websiteurl: "https://example.org",  
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
+            problem_statement: defaultProblemStatement,
+            organization_info: defaultOrganizationInfo,
           })
-      const { data: milestonesData, error: milestonesError } = await supabase
-        .from("milestone")
-        .select("*")
-        .eq("charity_2_id", id);
-
-          setMilestones([
-            {
-              id: "1",
-              charity_id: id as string,
-              milestone_name: "Initial Funding Goal",
-              target_amount: 2000,
-              funds_raised: 2000,
-              status: "completed",
-            },
-            {
-              id: "2",
-              charity_id: id as string,
-              milestone_name: "Educational Supplies",
-              target_amount: 1500,
-              funds_raised: 750,
-              status: "pending",
-            },
-          ])
+          const { data: milestonesData, error: milestonesError } = await supabase
+            .from("milestone")
+            .select("*")
+            .eq("charity_2_id", id)
 
           setLoading(false)
           return
@@ -190,18 +182,24 @@ const DonationDetails: React.FC = () => {
           // Sample donation data for development
           setDonation({
             id: id as string,
-            title: "Sample Donation Campaign",
-            description: "This is a sample donation campaign for development",
-            cover_image: "/placeholder.svg",
+            title: "Digital Inclusion Initiative",
+            description: "Providing digital access and education to vulnerable communities",
+            cover_image: "/placeholder.svg?height=400&width=800",
             total_amount: 0,
             target_amount: 10,
-            organization_name: "Sample Organization",
-            websiteurl: "https://example.org",
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
+            problem_statement: defaultProblemStatement,
+            organization_info: defaultOrganizationInfo,
           })
         } else {
-          setDonation(donationData as Donation)
+          // Add default problem statement and organization info if not present
+          const enhancedDonationData = {
+            ...donationData,
+            problem_statement: donationData.problem_statement || defaultProblemStatement,
+            organization_info: donationData.organization_info || defaultOrganizationInfo,
+          }
+          setDonation(enhancedDonationData as Donation)
         }
 
         setMilestones(milestonesData || [])
@@ -212,15 +210,15 @@ const DonationDetails: React.FC = () => {
         // Fallback to sample data on error
         setDonation({
           id: id as string,
-          title: "Sample Donation Campaign",
-          description: "This is a sample donation campaign for development",
-          cover_image: "/placeholder.svg",
+          title: "Digital Inclusion Initiative",
+          description: "Providing digital access and education to vulnerable communities",
+          cover_image: "/placeholder.svg?height=400&width=800",
           total_amount: 0,
           target_amount: 10,
-          organization_name: "Sample Organization",
-          websiteurl: "https://example.org",
           smart_contract_address: "0x0000000000000000000000000000000000000000",
           contract_abi: [],
+          problem_statement: defaultProblemStatement,
+          organization_info: defaultOrganizationInfo,
         })
       } finally {
         setLoading(false)
@@ -247,6 +245,53 @@ const DonationDetails: React.FC = () => {
       console.error("Error fetching donation events:", error)
     }
   }
+
+  const convertEthToMyr = async (ethAmount) => {
+    try {
+      // In a real application, you would fetch the current rate from an API
+      // For now, we'll use a fixed rate for demonstration
+      return ethAmount * ethToMyrRate
+    } catch (error) {
+      console.error("Error converting ETH to MYR:", error)
+      return ethAmount * ethToMyrRate // Fallback to using the default rate
+    }
+  }
+
+  // Update MYR values whenever ETH amounts change
+  useEffect(() => {
+    const updateMyrValues = async () => {
+      const totalRaisedMyr = await convertEthToMyr(totalRaised)
+      const targetAmountMyr = await convertEthToMyr(targetAmount)
+      const remainingAmountMyr = await convertEthToMyr(Math.max(targetAmount - totalRaised, 0))
+
+      setMyrValues({
+        totalRaised: totalRaisedMyr,
+        targetAmount: targetAmountMyr,
+        remainingAmount: remainingAmountMyr,
+      })
+    }
+
+    updateMyrValues()
+  }, [totalRaised, targetAmount, ethToMyrRate])
+
+  // Fetch current ETH to MYR rate
+  useEffect(() => {
+    const fetchEthToMyrRate = async () => {
+      try {
+        // In a real application, you would fetch the current rate from an API
+        // For demonstration, we'll use a fixed rate
+        setEthToMyrRate(12500) // 1 ETH = 12,500 MYR (example rate)
+      } catch (error) {
+        console.error("Error fetching ETH to MYR rate:", error)
+      }
+    }
+
+    fetchEthToMyrRate()
+    // Set up an interval to refresh the rate periodically
+    const intervalId = setInterval(fetchEthToMyrRate, 300000) // Every 5 minutes
+
+    return () => clearInterval(intervalId)
+  }, [])
 
   useEffect(() => {
     if (contract) {
@@ -321,27 +366,23 @@ const DonationDetails: React.FC = () => {
     }
   }, [donation])
 
-
-
-
-
   // Add this function to fetch milestone transactions with their hashes
   const fetchMilestoneTransactions = async () => {
-    if (!contract) return [];
-  
+    if (!contract) return []
+
     try {
-      const milestonesCount = await contract.getMilestonesCount();
-      console.log("Milestones count:", milestonesCount.toString()); 
-      const transactions = [];
-  
+      const milestonesCount = await contract.getMilestonesCount()
+      console.log("Milestones count:", milestonesCount.toString())
+      const transactions = []
+
       for (let i = 0; i < milestonesCount; i++) {
-        const milestone = await contract.getMilestone(i);
-        console.log(`Milestone ${i}:`, milestone); // Log each milestone
-        const completed = milestone[4]; // completed at index 3
-        const txHash = milestone[5]; // txHash at index 4
-        const wallet = milestone[1]; // wallet address at index 0
-        const targetAmount = milestone[2];
-  
+        const milestone = await contract.getMilestone(i)
+        console.log(`Milestone ${i}:`, milestone) // Log each milestone
+        const completed = milestone[4] // completed at index 3
+        const txHash = milestone[5] // txHash at index 4
+        const wallet = milestone[1] // wallet address at index 0
+        const targetAmount = milestone[2]
+
         // Ensure the transaction hash is valid (not empty)
         if (completed && txHash && txHash !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
           console.log("transactions are PUSHEDDDD")
@@ -349,44 +390,41 @@ const DonationDetails: React.FC = () => {
             index: i,
             targetAmount: targetAmount,
             name: milestonesName[i]?.milestone_name || `Milestone ${i + 1}`, // Fetch from useState variable
+            company_name: milestonesName[i]?.company_name,
             txHash: hexlify(txHash),
             wallet: wallet, // Extract wallet address
-          });
+          })
         }
       }
-  
+
       // Pass the data to LatestUpdate component
-      return transactions;
+      return transactions
     } catch (error) {
-      console.error("Error fetching milestone transactions:", error);
-      return [];
+      console.error("Error fetching milestone transactions:", error)
+      return []
     }
-  };
+  }
 
   useEffect(() => {
-    console.log("Contract: " , contract)
-    if (!contract) return; // Wait until contract is initialized
-  
-    console.log("Fetching transactions...");
+    console.log("Contract: ", contract)
+    if (!contract) return // Wait until contract is initialized
+
+    console.log("Fetching transactions...")
     const loadTransactions = async () => {
-      const transactions = await fetchMilestoneTransactions();
-      setMilestoneTransactions(transactions);
-      console.log("Transactions to be checked:", transactions);
-    };
-  
-    loadTransactions();
-  }, [contract]); // Run when contract is updated
-  
+      const transactions = await fetchMilestoneTransactions()
+      setMilestoneTransactions(transactions)
+      console.log("Transactions to be checked:", transactions)
+    }
 
-
-  
+    loadTransactions()
+  }, [contract]) // Run when contract is updated
 
   // Update the fetchContractData function to correctly get the total donations and target amount
   const fetchContractData = async () => {
     if (!donation?.smart_contract_address) return
 
     try {
-      const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/9fbb6c926b6942b1931e85244e9964af")
+      const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/b7624d9f81c5486c88a86ca6f4b3ed44")
       const contract = new ethers.Contract(donation.smart_contract_address, donation.contract_abi, provider)
 
       let targetAmountEth = 0
@@ -569,8 +607,21 @@ const DonationDetails: React.FC = () => {
     setModalOpen(true)
   }
 
-  if (loading) return <p>Loading...</p>
-  if (!donation) return <p>Donation not found.</p>
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600 mr-2" />
+        <p className="text-lg font-medium">Loading campaign details...</p>
+      </div>
+    )
+
+  if (!donation)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <AlertTriangle className="h-8 w-8 text-amber-500 mr-2" />
+        <p className="text-lg font-medium">Donation campaign not found.</p>
+      </div>
+    )
 
   // Use onChainTransactions instead of transactions for display
   const displayTransactions = onChainTransactions.length > 0 ? onChainTransactions : []
@@ -583,53 +634,86 @@ const DonationDetails: React.FC = () => {
   const milestonesName = milestones
 
   return (
-    <div className="min-h-screen pt-24 pb-8 px-6 bg-zinc-50 dark:bg-zinc-950">    {/* Add this new div to display the organization information */}
-    {donation.organization_name && (
-  <div className="container mx-auto px-6 pt-5">
-    <div className="flex items-center flex-wrap gap-3 mb-4 p-4 rounded-lg border border-emerald-400 dark:border-teal-700 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-sm">
-      <div className="flex items-center">
-        <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2 rounded-full mr-3">
-          <Building className="h-5 w-5 text-emerald-300" />
-        </div>
-        <div>
-          <div className="text-xs text-emerald-100 mb-0.5 font-medium">Organization</div>
-          <span className="font-semibold text-white">{donation.organization_name}</span>
-        </div>
-      </div>
-      
-      {donation.websiteurl && (
-        <Link 
-          href={donation.websiteurl} 
-          target="_blank" 
-          className="flex items-center ml-auto px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
-        >
-          <Globe className="h-4 w-4 mr-2 text-emerald-300" />
-          <span>{donation.websiteurl.replace(/^https?:\/\//, '')}</span>
-          <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
-        </Link>
-      )}
-    </div>
-  </div>
-)}
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-[1fr_350px]">
           <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl font-medium tracking-tight">{donation.title}</h1>
-              <p className="mt-2 text-zinc-500 dark:text-zinc-400">{donation.description}</p>
-            </div>
+            <div className="mb-2"></div>
 
-            <Card className="overflow-hidden border-0 bg-white shadow-sm dark:bg-zinc-900">
-              <div className="aspect-video w-full">
-                <img
-                  src={donation.cover_image || "/placeholder.svg"}
-                  alt={donation.title}
-                  className="h-full w-full object-cover"
-                />
-              </div>
+            {/* Enhanced Campaign Image Card */}
+            
+              <CardContent className="p-0">
+                <div className="relative">
+                  <img
+                    src={donation.cover_image || "/placeholder.svg?height=400&width=800"}
+                    alt={donation.title}
+                    className="h-[300px] w-full object-cover rounded-t-xl"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent rounded-t-xl">
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <Badge className="bg-green-600 rounded-full px-3 py-1 text-xs font-medium">
+                          Active Campaign
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="bg-black/30 text-white border-white/20 rounded-full px-3 py-1 text-xs font-medium"
+                        >
+                          Goal: {targetAmount.toFixed(2)} ETH
+                        </Badge>
+                      </div>
+                      <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{donation.title}</h1>
+                      <p className="text-zinc-200 text-sm max-w-3xl">{donation.description}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center dark:bg-green-900/30">
+                        <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-zinc-900 dark:text-zinc-100">Raised so far</div>
+                        <div className="text-sm text-zinc-500 dark:text-zinc-400">{progressPercentage}% of goal</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono text-lg font-medium text-green-700 dark:text-green-400">
+                        {totalRaised.toFixed(4)} ETH
+                      </div>
+                      <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                    </div>
+                  </div>
+                  <Progress
+                    value={progressPercentage}
+                    className="h-2 mt-2 bg-zinc-100 dark:bg-zinc-800"
+                    indicatorClassName="bg-green-600"
+                  />
+                </div>
+              </CardContent>
+            
+
+            {/* What's the Problem Section */}
+            <Card className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                  What's the problem?
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose prose-zinc dark:prose-invert max-w-none">
+                  <p className="text-zinc-700 dark:text-zinc-300 whitespace-pre-line">{donation.problem_statement}</p>
+
+                  <h3 className="text-xl font-medium mt-6 mb-2 text-green-700 dark:text-green-400">
+                    About Our Organization
+                  </h3>
+                  <p className="text-zinc-700 dark:text-zinc-300">{donation.organization_info}</p>
+                </div>
+              </CardContent>
             </Card>
 
-            <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
+            <Card className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-medium">Transaction History</CardTitle>
                 <CardDescription>Recent donations to this campaign</CardDescription>
@@ -682,7 +766,16 @@ const DonationDetails: React.FC = () => {
                                     </span>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-right font-mono">{tx.value && `${tx.value} ETH`}</TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {tx.value && (
+                                    <div>
+                                      <div>{tx.value} ETH</div>
+                                      <div className="text-xs text-zinc-500">
+                                        ≈ {(Number(tx.value) * ethToMyrRate).toLocaleString()} MYR
+                                      </div>
+                                    </div>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right text-zinc-500 dark:text-zinc-400">
                                   {tx.timestamp}
                                 </TableCell>
@@ -735,7 +828,16 @@ const DonationDetails: React.FC = () => {
                                     </span>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-right font-mono">{tx.value && `${tx.value} ETH`}</TableCell>
+                                <TableCell className="text-right font-mono">
+                                  {tx.value && (
+                                    <div>
+                                      <div>{tx.value} ETH</div>
+                                      <div className="text-xs text-zinc-500">
+                                        ≈ {(Number(tx.value) * ethToMyrRate).toLocaleString()} MYR
+                                      </div>
+                                    </div>
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right text-zinc-500 dark:text-zinc-400">
                                   {tx.timestamp}
                                 </TableCell>
@@ -751,7 +853,7 @@ const DonationDetails: React.FC = () => {
             </Card>
 
             {/* Add the Milestone Progress Card here */}
-            <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
+            <Card className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-medium">Milestone Progress</CardTitle>
                 <CardDescription>Transparent breakdown of funding goals and progress</CardDescription>
@@ -762,14 +864,26 @@ const DonationDetails: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Overall Progress</span>
-                      <span className="font-medium">
-                        {totalRaised.toFixed(4)} of {targetAmount.toFixed(4)} ETH
-                      </span>
+                      <div className="text-right">
+                        <div className="font-medium">
+                          {totalRaised.toFixed(4)} of {targetAmount.toFixed(4)} ETH
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          ≈ {myrValues.totalRaised.toLocaleString()} of {myrValues.targetAmount.toLocaleString()} MYR
+                        </div>
+                      </div>
                     </div>
-                    <Progress value={progressPercentage} className="h-2" />
+                    <Progress
+                      value={progressPercentage}
+                      className="h-2 bg-zinc-100 dark:bg-zinc-800"
+                      indicatorClassName="bg-green-600"
+                    />
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
                       <span>{progressPercentage}% Complete</span>
-                      <span>{remainingAmount.toFixed(4)} ETH remaining</span>
+                      <div className="text-right">
+                        <div>{remainingAmount.toFixed(4)} ETH remaining</div>
+                        <div className="text-xs">≈ {myrValues.remainingAmount.toLocaleString()} MYR</div>
+                      </div>
                     </div>
                   </div>
 
@@ -787,10 +901,15 @@ const DonationDetails: React.FC = () => {
                           : Math.min(Math.round((milestone.currentAmount / milestone.targetAmount) * 100), 100)
 
                         return (
-                          <div key={index} className="space-y-2 rounded-lg border bg-card p-4">
+                          <div
+                            key={index}
+                            className="space-y-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                          >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">Milestone {index + 1}</span>
+                                <span className="font-medium">
+                                  Milestone {index + 1}: {milestonesName[index]?.milestone_name}
+                                </span>
                                 {milestone.completed && (
                                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                                     <Check className="mr-1 h-3 w-3" /> Achieved
@@ -799,12 +918,22 @@ const DonationDetails: React.FC = () => {
                               </div>
                             </div>
 
-                            <Progress value={progressPercentage} className="h-2" />
+                            <Progress
+                              value={progressPercentage}
+                              className="h-2 bg-zinc-100 dark:bg-zinc-800"
+                              indicatorClassName="bg-green-600"
+                            />
 
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">{progressPercentage}% Complete</span>
-                              <div className="font-medium">
-                                {milestone.currentAmount.toFixed(4)} / {milestone.targetAmount.toFixed(4)} ETH
+                              <div>
+                                <div className="font-medium">
+                                  {milestone.currentAmount.toFixed(4)} / {milestone.targetAmount.toFixed(4)} ETH
+                                </div>
+                                <div className="text-xs text-zinc-500">
+                                  ≈ {(milestone.currentAmount * ethToMyrRate).toLocaleString()} /{" "}
+                                  {(milestone.targetAmount * ethToMyrRate).toLocaleString()} MYR
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -816,13 +945,11 @@ const DonationDetails: React.FC = () => {
               </CardContent>
             </Card>
             {/* Add the LatestUpdates component after the Milestone Progress Card */}
-            <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
-              <LatestUpdates milestoneTransactions={milestoneTransactions} campaignTitle={donation.title} />
-            </Card>
+            <LatestUpdates milestoneTransactions={milestoneTransactions} campaignTitle={donation.title} />
           </div>
 
           <div className="space-y-6">
-            <Card className="sticky top-6 border-0 bg-white shadow-sm dark:bg-zinc-900">
+            <Card className="sticky top-6 rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <CardHeader>
                 <CardTitle className="text-xl font-medium">Contribute</CardTitle>
                 <CardDescription>Support this campaign with ETH</CardDescription>
@@ -832,14 +959,26 @@ const DonationDetails: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Campaign Target</span>
-                    <span className="font-mono text-sm font-medium">{targetAmount.toFixed(4)} ETH</span>
+                    <div className="text-right">
+                      <span className="font-mono text-sm font-medium">{targetAmount.toFixed(4)} ETH</span>
+                      <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                    </div>
                   </div>
-                  <Progress value={progressPercentage} className="h-2" />
+                  <Progress
+                    value={progressPercentage}
+                    className="h-2 bg-zinc-100 dark:bg-zinc-800"
+                    indicatorClassName="bg-green-600"
+                  />
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-zinc-500 dark:text-zinc-400">{progressPercentage}% Complete</span>
-                    <span className="font-mono text-zinc-500 dark:text-zinc-400">
-                      {currentAmount.toFixed(4)} / {targetAmount.toFixed(4)} ETH
-                    </span>
+                    <div className="text-right">
+                      <span className="font-mono text-zinc-500 dark:text-zinc-400">
+                        {currentAmount.toFixed(4)} / {targetAmount.toFixed(4)} ETH
+                      </span>
+                      <div className="text-xs text-zinc-500">
+                        ≈ {myrValues.totalRaised.toLocaleString()} / {myrValues.targetAmount.toLocaleString()} MYR
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -852,13 +991,29 @@ const DonationDetails: React.FC = () => {
                       <div className="text-zinc-500 dark:text-zinc-400">{displayTransactions.length} donations</div>
                     </div>
                   </div>
-                  <div className="font-mono text-lg font-medium">{totalRaised.toFixed(4)} ETH</div>
+                  <div className="text-right">
+                    <div className="font-mono text-lg font-medium">{totalRaised.toFixed(4)} ETH</div>
+                    <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                  </div>
+                </div>
+
+                {/* Currency conversion info */}
+                <div className="rounded-md bg-green-50 p-3 dark:bg-green-900/20">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    <div className="text-sm">
+                      <div className="font-medium text-green-700 dark:text-green-400">Currency Conversion</div>
+                      <div className="text-green-600 dark:text-green-300">
+                        1 ETH ≈ {ethToMyrRate.toLocaleString()} MYR
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
                 <Button
                   onClick={openDonationModal}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                 >
                   Donate Now
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -866,7 +1021,7 @@ const DonationDetails: React.FC = () => {
               </CardFooter>
             </Card>
             {/* Contract Information Card */}
-            <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
+            <Card className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-medium">Contract Information</CardTitle>
                 <CardDescription>Verify this campaign's smart contract</CardDescription>
@@ -901,6 +1056,10 @@ const DonationDetails: React.FC = () => {
                   </div>
                 </div>
               </CardContent>
+              <div className="px-6 pb-2 pt-0 text-xs text-zinc-500 flex items-center justify-between">
+                <span>Powered by Solidity</span>
+                <span>Smart Contract Technology</span>
+              </div>
               <CardFooter>
                 <Button
                   variant="outline"
@@ -917,53 +1076,6 @@ const DonationDetails: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Security and Verification Section */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Wallet Security Check */}
-          <div className="bg-white rounded-lg shadow-md p-6 border border-yellow-100">
-            <div className="flex items-start">
-              <div className="bg-yellow-50 p-3 rounded-full mr-4">
-                <Shield className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Wallet Security Check</h3>
-                <p className="text-gray-600 mb-4">
-                  Don't know if the wallet is safe? Check their transaction and safety using our AI wallet security
-                  analyzer.
-                </p>
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" asChild>
-                  <Link href="/security/wallet-safety-check">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Analyze Wallet Security
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Company Verification */}
-          <div className="bg-white rounded-lg shadow-md p-6 border border-teal-100">
-            <div className="flex items-start">
-              <div className="bg-teal-50 p-3 rounded-full mr-4">
-                <Building2 className="h-6 w-6 text-teal-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Organization Verification</h3>
-                <p className="text-gray-600 mb-4">
-                  Don't know if the company is verified? Run a comprehensive background check on the organization.
-                </p>
-                <Button className="bg-teal-500 hover:bg-teal-600 text-white" asChild>
-                  <Link href="/security/verify-organizations">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Verify Organization
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
       {/* Donation Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
@@ -978,15 +1090,24 @@ const DonationDetails: React.FC = () => {
                 <div className="rounded-md bg-muted p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Target Amount</span>
-                    <span className="font-mono text-sm">{targetAmount.toFixed(2)} ETH</span>
+                    <div className="text-right">
+                      <span className="font-mono text-sm">{targetAmount.toFixed(2)} ETH</span>
+                      <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Current Amount</span>
-                    <span className="font-mono text-sm">{totalRaised.toFixed(4)} ETH</span>
+                    <div className="text-right">
+                      <span className="font-mono text-sm">{totalRaised.toFixed(4)} ETH</span>
+                      <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-sm font-medium">Needed</span>
-                    <span className="font-mono text-sm font-bold">{remainingAmount.toFixed(4)} ETH</span>
+                    <div className="text-right">
+                      <span className="font-mono text-sm font-bold">{remainingAmount.toFixed(4)} ETH</span>
+                      <div className="text-xs text-zinc-500">≈ {myrValues.remainingAmount.toLocaleString()} MYR</div>
+                    </div>
                   </div>
                 </div>
 
@@ -1007,6 +1128,11 @@ const DonationDetails: React.FC = () => {
                     onChange={(e) => setDonationAmount(e.target.value)}
                     className="font-mono"
                   />
+                  {donationAmount && (
+                    <div className="text-sm text-zinc-500">
+                      ≈ {(Number(donationAmount) * ethToMyrRate).toLocaleString()} MYR
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1017,7 +1143,7 @@ const DonationDetails: React.FC = () => {
                 <Button
                   type="button"
                   onClick={handleDonation}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                 >
                   Donate
                 </Button>
@@ -1027,7 +1153,7 @@ const DonationDetails: React.FC = () => {
 
           {isProcessing && (
             <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mb-4" />
+              <Loader2 className="h-8 w-8 animate-spin text-green-500 mb-4" />
               <p className="text-center font-medium">Processing your donation...</p>
               <p className="text-center text-sm text-muted-foreground mt-2">
                 Please confirm the transaction in your wallet and wait for it to be processed.
@@ -1041,7 +1167,10 @@ const DonationDetails: React.FC = () => {
                 <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 <AlertTitle>Donation Successful!</AlertTitle>
                 <AlertDescription>
-                  Thank you for your contribution of {donationAmount} ETH.
+                  <p>Thank you for your contribution of {donationAmount} ETH.</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                    ≈ {(Number(donationAmount) * ethToMyrRate).toLocaleString()} MYR
+                  </p>
                   {transactionResult.txHash && (
                     <div className="mt-2">
                       <Link
@@ -1060,7 +1189,7 @@ const DonationDetails: React.FC = () => {
                 <Button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                 >
                   Close
                 </Button>
@@ -1096,4 +1225,5 @@ const DonationDetails: React.FC = () => {
 }
 
 export default DonationDetails
+
 

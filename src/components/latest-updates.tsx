@@ -113,21 +113,21 @@ export default function LatestUpdates({ milestoneTransactions, campaignTitle }: 
                       </div>
                       <p className="text-sm">
                         <span className="font-medium">
-                          {(Number(milestone.targetAmount) / 1e18).toFixed(4)} ETH
+                          {(Number(milestone.targetAmount) / 1e18).toFixed(4)} ETH&nbsp;
                         </span>
-                        has been transferred to the recipient wallet
+                              has been transferred to {milestone.company_name}'s' wallet
                       </p>
 
                       {milestone.wallet && (
                         <div className="flex items-center">
                           <span className="font-mono">
-                            Recipient: {milestone.wallet.slice(0, 6)}...{milestone.wallet.slice(-4)}
+                            Recipient: {milestone.wallet}
                           </span>
                         </div>
                       )}
                       {milestone.txHash && (
                         <Link
-                          href={`https://sepolia.etherscan.io/tx/0x${milestone.txHash.slice(2)}`}
+                          href={`https://sepolia.etherscan.io/tx/0x${milestone.txHash}`}
                           target="_blank"
                           className="flex items-center text-primary hover:text-primary/80"
                         >
