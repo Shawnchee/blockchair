@@ -32,6 +32,19 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+venv
+
+
+# Ignore Python files
+*.py
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Ignore Python cache directories
+__pycache__/
+
 
 # vercel
 .vercel
