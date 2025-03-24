@@ -1,6 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
+import Link from "next/link";
 
 export default function OurApproachSection() {
   return (
@@ -31,9 +32,11 @@ export default function OurApproachSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                Donate Now
-              </Button>
+              <Link href="/charity/browse-projects" passHref>
+                `<Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                  Donate Now
+                </Button>
+              </Link>`
             </motion.div>
           </div>
 
@@ -44,7 +47,7 @@ export default function OurApproachSection() {
                 content: (
                   <>
                     We transfer your donation directly to the end beneficiary — meaning{" "}
-                    <span className="text-emerald-600 font-medium">100%</span> of your money goes to those who need it most.
+                    <span className="text-emerald-600 font-medium">99%</span> of your money goes to those who need it most.
                   </>
                 ),
                 delay: 0,

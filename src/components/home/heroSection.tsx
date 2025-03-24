@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { motion, useInView } from "framer-motion"
 import { ArrowRight } from "lucide-react"
+import Link from "next/link";
+
 
 // CountUp animation
 function CountUp({
@@ -106,10 +108,16 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
           >
-            <Button className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-md text-lg h-auto group transition-all duration-300 ease-in-out hover:scale-105 shadow-lg hover:shadow-emerald-300/50">
-              Donate Now
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+            <Link href="/charity/browse-projects" passHref>
+            <Button
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 rounded-md text-lg h-auto group transition-all duration-300 ease-in-out hover:scale-105 shadow-lg hover:shadow-emerald-300/50 active:scale-95"
+            >
+              <span className="flex items-center gap-2 group-hover:animate-bounce">
+                Donate Now
+                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
             </Button>
+          </Link>
           </motion.div>
 
           <motion.div

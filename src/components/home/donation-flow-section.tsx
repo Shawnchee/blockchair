@@ -10,6 +10,14 @@ import {
   Users,
   User,
   LucideIcon,
+  FilePlus2,
+  Code,
+  Zap,
+  Banknote,
+  DollarSign,
+  HeartHandshake,
+  Send,
+  Network,
 } from "lucide-react"
 
 // Define interfaces
@@ -88,55 +96,55 @@ export default function DonationFlowSection() {
     individuals: [
       {
         id: 1,
-        icon: User,
-        text: "Donor gives to Binance Charity in crypto.",
+        icon: DollarSign,
+        text: "The donor converts fiat currency into ETH.",
       },
       {
         id: 2,
         icon: Wallet,
-        text: "Binance Charity partnered with local NGOs to help beneficiaries open a crypto wallet.",
+        text: "ETH is deposited into the donor’s smart wallet.",
       },
       {
         id: 3,
-        icon: Users,
-        text: "Binance Charity sends donations to beneficiaries directly in crypto.",
+        icon: HeartHandshake,
+        text: "The donor selects a donation project to support.",
       },
       {
         id: 4,
-        icon: CreditCard,
-        text: "Beneficiaries can spend crypto online or offline using Binance Pay or Card.",
+        icon: Send,
+        text: "The donor initiates the donation by sending ETH to the project’s smart contract.",
       },
       {
         id: 5,
-        icon: Building,
-        text: "They can also withdraw cash to their bank account or from ATMs.",
+        icon: Network,
+        text: "The smart contract automatically distributes funds to the wallet addresses of verified executing organizations.",
       },
     ],
     ngos: [
       {
         id: 1,
-        icon: User,
-        text: "Donor gives to Charity in Solana.",
+        icon: FilePlus2,
+        text: "NGOs set up a donation project by defining the goal, timeline, and structure.",
       },
       {
         id: 2,
         icon: Users,
-        text: "Binance Charity partners with verified NGOs to distribute funds.",
+        text: "Specify milestone proportions and assign wallet addresses to responsible organizations.",
       },
       {
         id: 3,
-        icon: Wallet,
-        text: "NGOs receive crypto donations directly to their wallet.",
+        icon: Code,
+        text: "The smart contract is deployed with all conditions encoded, including fund distribution rules.",
       },
       {
         id: 4,
-        icon: CreditCard,
-        text: "NGOs convert crypto to local currency or use Binance services.",
+        icon: Zap,
+        text: "Once milestones are achieved or the project reaches maturity, the contract is triggered.",
       },
       {
         id: 5,
-        icon: Building,
-        text: "NGOs distribute aid and provide transparency reports.",
+        icon: Banknote,
+        text: "Funds are automatically distributed to each party based on the agreed proportions including their share of marketing funds",
       },
     ],
   }
