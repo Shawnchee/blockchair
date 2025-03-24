@@ -2,14 +2,14 @@ import { CharityAnalysisDashboard } from "@/components/charity-analysis-dashboar
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-2">Charity Fundraising Analysis</h1>
-        <p className="text-muted-foreground mb-8">
+    <div className="container mx-auto min-h-screen pt-24 pb-8 px-4 flex flex-col max-w-6xl">    
+          <div className="bg-gradient-to-r from-teal-500 to-emerald-500 rounded-lg p-8 mb-8 shadow-lg">
+            <h1 className="text-4xl md:text-5xl font-bold text-white my-8">Charity Fundraising Analysis</h1>
+        <p className="text-xl text-white/90 max-w-2xl">
           Select charities to analyze and get AI-powered fundraising goal suggestions
         </p>
+        </div>
         <CharityAnalysisDashboard />
-      </div>
     </div>
   )
 }

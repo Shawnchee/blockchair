@@ -137,8 +137,8 @@ export default function CompanyCheck() {
   return (
     <div className="w-full">
       {/* Button to open the dialog */}
-      <Button onClick={() => setOpen(true)} className="mb-4 flex items-center gap-2" size="lg">
-        <Shield className="h-4 w-4" />
+      <Button onClick={() => setOpen(true)} className=" flex items-center gap-2 w-full cursor-pointer h-full text-3xl">
+        <Shield className="!h-6 !w-6" />
         Run Company Check
       </Button>
 
