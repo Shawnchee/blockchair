@@ -11,6 +11,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+
 // List of categories that should bypass the OpenAI API and use direct calculation
 const BYPASS_API_CATEGORIES = [
   "Veterans",

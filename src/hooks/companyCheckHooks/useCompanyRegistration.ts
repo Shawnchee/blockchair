@@ -14,9 +14,9 @@ export function useCompanyRegistrationCheck() {
     if (!registrationNumber) return null;
     setLoading(true);
     setError(null);
-
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     try {
-      const response = await fetch("/api/companyRegistrationCheck", {
+      const response = await fetch(`${baseUrl}/companyRegistrationCheck`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ registrationNumber }),

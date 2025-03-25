@@ -54,8 +54,9 @@ export function useAIAnalysis() {
         ],
         response_format: zodResponseFormat(companyCheckSchema, "companyCheckAnalysis"),
       };
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-      const response = await fetch("/api/companyCheck", {
+      const response = await fetch(`${baseUrl}/api/companyCheck`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

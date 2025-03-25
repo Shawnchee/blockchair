@@ -15,9 +15,10 @@ export function useSSLCheck() {
     if (!url) return null;
     setLoading(true);
     setError(null);
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     try {
-      const response = await fetch("/api/sslcheck", {
+      const response = await fetch(`${baseUrl}/api/sslcheck`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
