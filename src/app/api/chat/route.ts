@@ -72,9 +72,7 @@ Or using bullet points:
 Be friendly, helpful, and concise in your responses. Use the horizontal separators only for major points that require visual separation, not between every small item in a tight list.`,
     })
 
-    return new Response(result.toDataStreamResponse(), {
-      headers: corsHeaders,
-    });
+    return result.toDataStreamResponse();
   } catch (error) {
     console.error("Error with OpenAI API:", error);
     return new Response(
@@ -91,5 +89,6 @@ export async function OPTIONS() {
     headers: corsHeaders,
   });
 }
+
 
 
