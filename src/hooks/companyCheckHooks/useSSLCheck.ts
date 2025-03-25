@@ -20,7 +20,11 @@ export function useSSLCheck() {
     try {
       const response = await fetch(`${baseUrl}/api/sslcheck`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "https://www.block-chair.tech", // Allow requests from your domain
+          "Access-Control-Allow-Methods": "POST, OPTIONS", // Allow POST and OPTIONS methods
+          "Access-Control-Allow-Headers": "Content-Type", // Allow specific headers
+         },
         body: JSON.stringify({ url }),
       });
 
