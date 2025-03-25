@@ -1,9 +1,17 @@
 import { openai } from "@ai-sdk/openai"
 import { streamText } from "ai"
 
+const corsHeaders = {
+    "Access-Control-Allow-Origin": "https://www.block-chair.tech", // Allow requests from your domain
+    "Access-Control-Allow-Methods": "POST, OPTIONS", // Allow POST and OPTIONS methods
+    "Access-Control-Allow-Headers": "Content-Type", // Allow specific headers
+  };
+  
+
 export const maxDuration = 30
 
 export async function POST(req: Request) {
+    try {
     const { messages } = await req.json()
 
     // You can change the model to any OpenAI model you have access to
@@ -64,6 +72,24 @@ Or using bullet points:
 Be friendly, helpful, and concise in your responses. Use the horizontal separators only for major points that require visual separation, not between every small item in a tight list.`,
     })
 
-    return result.toDataStreamResponse()
+    return new Response(result.toDataStreamResponse(), {
+      headers: corsHeaders,
+    });
+  } catch (error) {
+    console.error("Error with OpenAI API:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch OpenAI response" }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
 }
+
+// Handle OPTIONS requests (CORS preflight)
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
 

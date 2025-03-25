@@ -16,7 +16,7 @@ export function useCompanyRegistrationCheck() {
     setError(null);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     try {
-      const response = await fetch(`${baseUrl}/companyRegistrationCheck`, {
+      const response = await fetch(`${baseUrl}/api/companyRegistrationCheck`, {
         method: "POST",
         headers: { "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "https://www.block-chair.tech", // Allow requests from your domain
