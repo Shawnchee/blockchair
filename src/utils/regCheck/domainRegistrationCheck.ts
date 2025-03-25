@@ -7,7 +7,10 @@ export async function registrationCheck(domain: string) {
         const formattedDomain = new URL(domain).hostname.replace("www.", "");
         const rdapUrl = `https://rdap.org/domain/${formattedDomain}`;
 
-        const browser = await puppeteer.launch({ headless: true }); 
+        const browser = await puppeteer.launch({ headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for serverless environments
+
+        }); 
         const page = await browser.newPage();
         await page.goto(rdapUrl, { waitUntil: 'domcontentloaded' });
     

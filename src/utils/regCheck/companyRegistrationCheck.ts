@@ -4,7 +4,10 @@ export async function companyRegistrationCheck(registrationNumber: string) {
     try {
         console.log("Scraping website with registration number:", registrationNumber);
         const registrationDetailsUrl = `https://opencorporates.com/companies/gb/${registrationNumber}`;
-        const browser = await puppeteer.launch({ headless: true }); 
+        const browser = await puppeteer.launch({ headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"], // Required for serverless environments
+
+         }); 
         const page = await browser.newPage();
         await page.goto(registrationDetailsUrl, { waitUntil: 'domcontentloaded' });
         console.log("link:", registrationDetailsUrl);
