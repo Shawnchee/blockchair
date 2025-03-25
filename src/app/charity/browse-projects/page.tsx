@@ -9,6 +9,7 @@ import { CheckCircle, X, ArrowRight, Calendar, Users, Heart, Sparkles } from "lu
 import AISmartDonation from "@/components/ai-smart-donation"
 import { Button } from "@/components/ui/button"
 import supabase from "@/utils/supabase/client"
+import { Suspense } from "react"
 
 interface DonationProps {
   id: number
@@ -128,7 +129,7 @@ const SuccessDialog = ({ onClose }: { onClose: () => void }) => {
   )
 }
 
-const DonationPage = () => {
+const DonationPageContent = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [donations, setDonations] = useState<DonationProps[]>([])
@@ -225,6 +226,14 @@ const DonationPage = () => {
       <AISmartDonation />
       </div>
     </div>
+  )
+}
+
+const DonationPage = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DonationPageContent />
+    </Suspense>
   )
 }
 

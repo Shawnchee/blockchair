@@ -12,6 +12,8 @@ interface MilestoneTransaction {
   targetAmount: number
   txHash: string
   wallet: string
+  company_name: string
+  websiteurl: string
 }
 
 interface LatestUpdatesProps {
