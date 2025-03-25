@@ -121,7 +121,7 @@ export default function WalletChecker() {
   return (
     <div className="container mx-auto min-h-screen pt-24 pb-8 px-4 max-w-5xl">
       <Card className="shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-lg py-4">
+        <CardHeader className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-t-lg py-4">
           <CardTitle className="text-2xl font-bold flex items-center gap-2 ">
             <Shield className="h-6 w-6" /> Ethereum Wallet Security Analyzer
           </CardTitle>
@@ -138,7 +138,7 @@ export default function WalletChecker() {
               placeholder="Enter Ethereum Wallet Address"
               className="flex-1"
             />
-            <Button onClick={fetchTransactions} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={fetchTransactions} disabled={loading} className="bg-black hover:bg-blue-700 cursor-pointer">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

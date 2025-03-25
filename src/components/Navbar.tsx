@@ -65,7 +65,7 @@ const WalletButton = dynamic(() => import("./WalletButton"), { ssr: false })
       dropdown: [
         { name: "Browse Project", href: "/charity/browse-projects" },
         { name: "Start a Project", href: "/charity/start-project" },
-        { name: "AI Campaign Planner", href: "/charity/analyse" },
+        { name: "AI Campaign Planner", href: "/analyse" },
         { name: "Blog", href: "/charity/blog" },
       ],
     },

@@ -51,7 +51,7 @@ const BlogPage = () => {
 
   return (
     <div className="container mx-auto pt-24 pb-8 px-6 min-h-screen">
-      <h2 className="text-2xl font-bold mb-4">Browse Fundraisers</h2>
+      <h2 className="text-2xl font-bold mb-4">Education Blog Posts</h2>
       {loading ? (
         <p>Loading blogs...</p>
       ) : (
