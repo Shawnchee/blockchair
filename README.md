@@ -6,12 +6,12 @@
   
 
 
-  [![Next.js](https://img.shields.io/badge/Next.js-Framework-black?logo=next.js)](https://nextjs.org/)
-    [![Python](https://img.shields.io/badge/Python-Machine_Learning_Integration-3776AB?logo=python)](https://www.python.org/)
-  [![Supabsase](https://img.shields.io/badge/Supabase-Backend-3FCF8E?logo=supabase)](https://supabase.com/)
-  [![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-  [![Node.js](https://img.shields.io/badge/Node.js-Runtime-339933?logo=node.js)](https://nodejs.org/)
-  [![MetaMask](https://img.shields.io/badge/MetaMask-Wallet_Integration-F6851B?logo=Metamask)](https://metamask.io/)
+[![Next.js](https://img.shields.io/badge/Next.js-Framework-black?logo=next.js)](https://nextjs.org/)
+[![Python](https://img.shields.io/badge/Python-Machine_Learning_Integration-3776AB?logo=python)](https://www.python.org/)
+[![Supabsase](https://img.shields.io/badge/Supabase-Backend-3FCF8E?logo=supabase)](https://supabase.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-Runtime-339933?logo=node.js)](https://nodejs.org/)
+[![MetaMask](https://img.shields.io/badge/MetaMask-Wallet_Integration-F6851B?logo=Metamask)](https://metamask.io/)
 [![Ethereum](https://img.shields.io/badge/Ethereum-Powered-3C3C3D?logo=ethereum)](https://ethereum.org/)
 [![Solidity](https://img.shields.io/badge/Solidity-Smart_Contracts-363636?logo=solidity)](https://soliditylang.org/)
 [![Infura](https://img.shields.io/badge/Infura-Sepolia_API-F50D0D?logo=ethereum)](https://infura.io/)
@@ -22,6 +22,9 @@
 
 
 </div>
+
+> 🚧 **Note:** The website is currently hosted at [www.block-chair.tech](https://www.block-chair.tech). Some features may not be fully functional due to production environment limitations. We are actively working on improvements.
+
 
 ## 📘 Project Description
 
