@@ -1,10 +1,12 @@
 "use client"
+
 import Link from "next/link"
 import { Calendar, Check, ExternalLink, Heart, School, Users } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface MilestoneTransaction {
   index: number
@@ -17,11 +19,18 @@ interface MilestoneTransaction {
 }
 
 interface LatestUpdatesProps {
+  contractAddress: string
   milestoneTransactions: MilestoneTransaction[]
   campaignTitle: string
+  isLoading?: boolean
 }
 
-export default function LatestUpdates({ milestoneTransactions, campaignTitle }: LatestUpdatesProps) {
+export default function LatestUpdates({
+  contractAddress,
+  milestoneTransactions,
+  campaignTitle,
+  isLoading = false,
+}: LatestUpdatesProps) {
   // Sample impact data - in a real app, this would come from your database
   const impactStories = [
     {
@@ -49,8 +58,6 @@ export default function LatestUpdates({ milestoneTransactions, campaignTitle }: 
       category: "healthcare",
     },
   ]
-
-  console.log("info",milestoneTransactions);
 
   return (
     <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
@@ -96,10 +103,30 @@ export default function LatestUpdates({ milestoneTransactions, campaignTitle }: 
               </div>
             )}
           </TabsContent>
-            
+
           {/* Milestone Transfers Tab */}
           <TabsContent value="milestones" className="space-y-4">
-            {milestoneTransactions.length > 0 ? (
+            {isLoading ? (
+              // Skeleton loading state for milestones
+              Array(3)
+                .fill(0)
+                .map((_, index) => (
+                  <div key={`skeleton-${index}`} className="rounded-lg border bg-card p-4">
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-5 w-48" />
+                          <Skeleton className="h-5 w-20" />
+                        </div>
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+            ) : milestoneTransactions.length > 0 ? (
               milestoneTransactions.map((milestone, index) => (
                 <div key={index} className="rounded-lg border bg-card p-4">
                   <div className="flex items-start gap-4">
@@ -117,19 +144,17 @@ export default function LatestUpdates({ milestoneTransactions, campaignTitle }: 
                         <span className="font-medium">
                           {(Number(milestone.targetAmount) / 1e18).toFixed(4)} ETH&nbsp;
                         </span>
-                              has been transferred to {milestone.company_name}'s' wallet
+                        has been transferred to {milestone.company_name}'s wallet
                       </p>
 
                       {milestone.wallet && (
                         <div className="flex items-center">
-                          <span className="font-mono">
-                            Recipient: {milestone.wallet}
-                          </span>
+                          <span className="font-mono">Recipient: {milestone.wallet}</span>
                         </div>
                       )}
                       {milestone.txHash && (
                         <Link
-                          href={`https://sepolia.etherscan.io/tx/0x${milestone.txHash}`}
+                          href={`https://sepolia.etherscan.io/address/${contractAddress}#internaltx`}
                           target="_blank"
                           className="flex items-center text-primary hover:text-primary/80"
                         >
@@ -140,20 +165,15 @@ export default function LatestUpdates({ milestoneTransactions, campaignTitle }: 
                     </div>
                   </div>
                 </div>
-
               ))
             ) : (
               <div className="rounded-lg border bg-card p-6 text-center">
-                <p className="text-muted-foreground">
-                  No milestone transfers have been completed yet.
-                </p>
+                <p className="text-muted-foreground">No milestone transfers have been completed yet.</p>
               </div>
             )}
           </TabsContent>
-
         </Tabs>
       </CardContent>
     </Card>
   )
 }
-

@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Globe,
-  Building
+  Building,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -41,6 +41,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import LatestUpdates from "../../../../components/latest-updates"
 
 interface Donation {
@@ -88,13 +89,14 @@ const DonationDetails: React.FC = () => {
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [dataLoading, setDataLoading] = useState(true) // New state for data loading
   const [onChainTransactions, setOnChainTransactions] = useState<Transaction[]>([])
   const [totalRaised, setTotalRaised] = useState<number>(0)
   const [targetAmount, setTargetAmount] = useState<number>(10) // Default to 10 ETH, will be updated from contract
   const [milestonesOnChain, setMilestonesOnChain] = useState<any[]>([])
   const [contract, setContract] = useState<any>(null)
   const [contractCreationDate, setContractCreationDate] = useState<string>("")
-  const [ethToMyrRate, setEthToMyrRate] = useState<number>(12500) // Default rate, will be updated
+  const [ethToMyrRate, setEthToMyrRate] = useState<number>(0) // Default rate, will be updated
   const [myrValues, setMyrValues] = useState({
     totalRaised: 0,
     targetAmount: 0,
@@ -136,6 +138,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
+      setDataLoading(true) // Set data loading to true when fetching starts
 
       try {
         // Check if Supabase is properly initialized
@@ -151,7 +154,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             total_amount: 0,
             target_amount: 10,
             organization_name: "Sample Organization",
-            websiteurl: "https://example.org", 
+            websiteurl: "https://example.org",
             smart_contract_address: "0x0000000000000000000000000000000000000000",
             contract_abi: [],
             problem_statement: defaultProblemStatement,
@@ -163,6 +166,10 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             .eq("charity_2_id", id)
 
           setLoading(false)
+          // Simulate data loading delay
+          setTimeout(() => {
+            setDataLoading(false)
+          }, 3000)
           return
         }
 
@@ -235,6 +242,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         })
       } finally {
         setLoading(false)
+        // Keep dataLoading true until contract data is fetched
       }
     }
 
@@ -290,20 +298,38 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
   // Fetch current ETH to MYR rate
   useEffect(() => {
     const fetchEthToMyrRate = async () => {
+      console.log("Trying to fetch price of ETH to MYR")
+
       try {
-        // In a real application, you would fetch the current rate from an API
-        // For demonstration, we'll use a fixed rate
-        setEthToMyrRate(12500) // 1 ETH = 12,500 MYR (example rate)
+        // Assuming your backend is running on localhost:3001 or another address
+        const response = await fetch("/api/ethConversion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "https://your-frontend-url.com", // Adjust to your actual frontend URL
+            "Access-Control-Allow-Methods": "POST, OPTIONS", // Allow POST and OPTIONS methods
+            "Access-Control-Allow-Headers": "Content-Type", // Allow specific headers
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setEthToMyrRate(data.myrPrice) // Set the MYR price in state
+          console.log("SET NEW ETHEREUM PRICE TO:", data.myrPrice)
+        } else {
+          console.error("Failed to fetch ETH to MYR rate. Status:", response.status)
+        }
       } catch (error) {
         console.error("Error fetching ETH to MYR rate:", error)
       }
     }
 
     fetchEthToMyrRate()
-    // Set up an interval to refresh the rate periodically
-    const intervalId = setInterval(fetchEthToMyrRate, 300000) // Every 5 minutes
 
-    return () => clearInterval(intervalId)
+    // Set up an interval to refresh the rate periodically
+    const intervalId = setInterval(fetchEthToMyrRate, 10000) // Every 10 seconds (you can adjust this as needed)
+
+    return () => clearInterval(intervalId) // Cleanup the interval on component unmount
   }, [])
 
   useEffect(() => {
@@ -538,8 +564,12 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
       // 7️⃣ Set final state values
       setTargetAmount(targetAmountEth)
       setTotalRaised(totalRaisedEth)
+
+      // Set data loading to false after all data is fetched
+      setDataLoading(false)
     } catch (error) {
       console.error("Error fetching contract data:", error)
+      setDataLoading(false) // Make sure to set loading to false even on error
     }
   }
 
@@ -649,90 +679,104 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
   return (
     <div className="min-h-screen pt-24 pb-8 px-6 bg-zinc-50 dark:bg-zinc-950">
       {donation.organization_name && (
-  <div className="container mx-auto px-6 pt-5">
-    <div className="flex items-center flex-wrap gap-3 mb-4 p-4 rounded-lg border border-emerald-400 dark:border-teal-700 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-sm">
-      <div className="flex items-center">
-        <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2 rounded-full mr-3">
-          <Building className="h-5 w-5 text-emerald-300" />
+        <div className="container mx-auto px-6 pt-5">
+          <div className="flex items-center flex-wrap gap-3 mb-4 p-4 rounded-lg border border-emerald-400 dark:border-teal-700 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-sm">
+            <div className="flex items-center">
+              <div className="bg-white bg-opacity-20 backdrop-blur-sm p-2 rounded-full mr-3">
+                <Building className="h-5 w-5 text-emerald-300" />
+              </div>
+              <div>
+                <div className="text-xs text-emerald-100 mb-0.5 font-medium">Organization</div>
+                <span className="font-semibold text-white">{donation.organization_name}</span>
+              </div>
+            </div>
+
+            {donation.websiteurl && (
+              <Link
+                href={donation.websiteurl}
+                target="_blank"
+                className="flex items-center ml-auto px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
+              >
+                <Globe className="h-4 w-4 mr-2 text-emerald-300" />
+                <span>{donation.websiteurl.replace(/^https?:\/\//, "")}</span>
+                <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
+              </Link>
+            )}
+          </div>
         </div>
-        <div>
-          <div className="text-xs text-emerald-100 mb-0.5 font-medium">Organization</div>
-          <span className="font-semibold text-white">{donation.organization_name}</span>
-        </div>
-      </div>
-      
-      {donation.websiteurl && (
-        <Link 
-          href={donation.websiteurl} 
-          target="_blank" 
-          className="flex items-center ml-auto px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
-        >
-          <Globe className="h-4 w-4 mr-2 text-emerald-300" />
-          <span>{donation.websiteurl.replace(/^https?:\/\//, '')}</span>
-          <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
-        </Link>
       )}
-    </div>
-  </div>
-)}
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 md:grid-cols-[1fr_350px]">
           <div className="space-y-8">
             <div className="mb-2"></div>
 
             {/* Enhanced Campaign Image Card */}
-            
-              <CardContent className="p-0">
-                <div className="relative">
-                  <img
-                    src={donation.cover_image || "/placeholder.svg?height=400&width=800"}
-                    alt={donation.title}
-                    className="h-[300px] w-full object-cover rounded-t-xl"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent rounded-t-xl">
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <Badge className="bg-green-600 rounded-full px-3 py-1 text-xs font-medium">
-                          Active Campaign
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className="bg-black/30 text-white border-white/20 rounded-full px-3 py-1 text-xs font-medium"
-                        >
-                          Goal: {targetAmount.toFixed(2)} ETH
-                        </Badge>
+
+            <CardContent className="p-0">
+              <div className="relative">
+                <img
+                  src={donation.cover_image || "/placeholder.svg?height=400&width=800"}
+                  alt={donation.title}
+                  className="h-[300px] w-full object-cover rounded-t-xl"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent rounded-t-xl">
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <Badge className="bg-green-600 rounded-full px-3 py-1 text-xs font-medium">Active Campaign</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-black/30 text-white border-white/20 rounded-full px-3 py-1 text-xs font-medium"
+                      >
+                        Goal:{" "}
+                        {dataLoading ? (
+                          <Skeleton className="h-4 w-16 inline-block" />
+                        ) : (
+                          `${targetAmount.toFixed(2)} ETH`
+                        )}
+                      </Badge>
+                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{donation.title}</h1>
+                    <p className="text-zinc-200 text-sm max-w-3xl">{donation.description}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center dark:bg-green-900/30">
+                      <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-zinc-900 dark:text-zinc-100">Raised so far</div>
+                      <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                        {dataLoading ? <Skeleton className="h-4 w-16" /> : `${progressPercentage}% of goal`}
                       </div>
-                      <h1 className="text-3xl font-bold tracking-tight text-white mb-2">{donation.title}</h1>
-                      <p className="text-zinc-200 text-sm max-w-3xl">{donation.description}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-mono text-lg font-medium text-green-700 dark:text-green-400">
+                      {dataLoading ? <Skeleton className="h-6 w-24 ml-auto" /> : `${totalRaised.toFixed(4)} ETH`}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      {dataLoading ? (
+                        <Skeleton className="h-3 w-20 ml-auto" />
+                      ) : (
+                        `≈ ${myrValues.totalRaised.toLocaleString()} MYR`
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="p-5 border-t border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center dark:bg-green-900/30">
-                        <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-zinc-900 dark:text-zinc-100">Raised so far</div>
-                        <div className="text-sm text-zinc-500 dark:text-zinc-400">{progressPercentage}% of goal</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-lg font-medium text-green-700 dark:text-green-400">
-                        {totalRaised.toFixed(4)} ETH
-                      </div>
-                      <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
-                    </div>
-                  </div>
+                {dataLoading ? (
+                  <Skeleton className="h-2 w-full mt-2" />
+                ) : (
                   <Progress
                     value={progressPercentage}
                     className="h-2 mt-2 bg-zinc-100 dark:bg-zinc-800"
                     indicatorClassName="bg-green-600"
                   />
-                </div>
-              </CardContent>
-            
+                )}
+              </div>
+            </CardContent>
 
             {/* What's the Problem Section */}
             <Card className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -776,7 +820,27 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {displayTransactions.length === 0 ? (
+                          {dataLoading ? (
+                            // Skeleton loading for transactions
+                            Array(5)
+                              .fill(0)
+                              .map((_, index) => (
+                                <TableRow key={`skeleton-tx-${index}`}>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-24" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-32" />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Skeleton className="h-4 w-20 ml-auto" />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Skeleton className="h-4 w-28 ml-auto" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                          ) : displayTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={4} className="text-center py-6 text-zinc-500">
                                 No donations yet
@@ -838,7 +902,27 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {displayTransactions.length === 0 ? (
+                          {dataLoading ? (
+                            // Skeleton loading for recent transactions
+                            Array(3)
+                              .fill(0)
+                              .map((_, index) => (
+                                <TableRow key={`skeleton-recent-${index}`}>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-24" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Skeleton className="h-4 w-32" />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Skeleton className="h-4 w-20 ml-auto" />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Skeleton className="h-4 w-28 ml-auto" />
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                          ) : displayTransactions.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={4} className="text-center py-6 text-zinc-500">
                                 No donations yet
@@ -905,25 +989,49 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Overall Progress</span>
                       <div className="text-right">
-                        <div className="font-medium">
-                          {totalRaised.toFixed(4)} of {targetAmount.toFixed(4)} ETH
-                        </div>
-                        <div className="text-xs text-zinc-500">
-                          ≈ {myrValues.totalRaised.toLocaleString()} of {myrValues.targetAmount.toLocaleString()} MYR
-                        </div>
+                        {dataLoading ? (
+                          <Skeleton className="h-5 w-32 ml-auto" />
+                        ) : (
+                          <div className="font-medium">
+                            {totalRaised.toFixed(4)} of {targetAmount.toFixed(4)} ETH
+                          </div>
+                        )}
+                        {dataLoading ? (
+                          <Skeleton className="h-3 w-40 ml-auto" />
+                        ) : (
+                          <div className="text-xs text-zinc-500">
+                            ≈ {myrValues.totalRaised.toLocaleString()} of {myrValues.targetAmount.toLocaleString()} MYR
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <Progress
-                      value={progressPercentage}
-                      className="h-2 bg-zinc-100 dark:bg-zinc-800"
-                      indicatorClassName="bg-green-600"
-                    />
+                    {dataLoading ? (
+                      <Skeleton className="h-2 w-full" />
+                    ) : (
+                      <Progress
+                        value={progressPercentage}
+                        className="h-2 bg-zinc-100 dark:bg-zinc-800"
+                        indicatorClassName="bg-green-600"
+                      />
+                    )}
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{progressPercentage}% Complete</span>
-                      <div className="text-right">
-                        <div>{remainingAmount.toFixed(4)} ETH remaining</div>
-                        <div className="text-xs">≈ {myrValues.remainingAmount.toLocaleString()} MYR</div>
-                      </div>
+                      {dataLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-24" />
+                          <div className="text-right">
+                            <Skeleton className="h-4 w-28 ml-auto" />
+                            <Skeleton className="h-3 w-36 ml-auto mt-1" />
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span>{progressPercentage}% Complete</span>
+                          <div className="text-right">
+                            <div>{remainingAmount.toFixed(4)} ETH remaining</div>
+                            <div className="text-xs">≈ {myrValues.remainingAmount.toLocaleString()} MYR</div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -931,7 +1039,30 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                   <div className="space-y-4">
                     <div className="text-sm font-medium">Funding Milestones</div>
 
-                    {milestonesOnChain.length === 0 ? (
+                    {dataLoading ? (
+                      // Skeleton loading for milestones
+                      Array(3)
+                        .fill(0)
+                        .map((_, index) => (
+                          <div
+                            key={`skeleton-milestone-${index}`}
+                            className="space-y-2 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                          >
+                            <div className="flex items-center justify-between">
+                              <Skeleton className="h-5 w-48" />
+                              <Skeleton className="h-5 w-20" />
+                            </div>
+                            <Skeleton className="h-2 w-full" />
+                            <div className="flex items-center justify-between">
+                              <Skeleton className="h-4 w-24" />
+                              <div>
+                                <Skeleton className="h-4 w-32 ml-auto" />
+                                <Skeleton className="h-3 w-40 ml-auto mt-1" />
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                    ) : milestonesOnChain.length === 0 ? (
                       <div className="text-center py-6 text-zinc-500">No milestones found for this campaign</div>
                     ) : (
                       milestonesOnChain.map((milestone, index) => {
@@ -985,7 +1116,12 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
               </CardContent>
             </Card>
             {/* Add the LatestUpdates component after the Milestone Progress Card */}
-            <LatestUpdates milestoneTransactions={milestoneTransactions} campaignTitle={donation.title} />
+            <LatestUpdates
+              contractAddress={donation.smart_contract_address}
+              milestoneTransactions={milestoneTransactions}
+              campaignTitle={donation.title}
+              isLoading={dataLoading}
+            />
           </div>
 
           <div className="space-y-6">
@@ -1000,25 +1136,50 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Campaign Target</span>
                     <div className="text-right">
-                      <span className="font-mono text-sm font-medium">{targetAmount.toFixed(4)} ETH</span>
-                      <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                      {dataLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-24 ml-auto" />
+                          <Skeleton className="h-3 w-32 ml-auto mt-1" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-mono text-sm font-medium">{targetAmount.toFixed(4)} ETH</span>
+                          <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <Progress
-                    value={progressPercentage}
-                    className="h-2 bg-zinc-100 dark:bg-zinc-800"
-                    indicatorClassName="bg-green-600"
-                  />
+                  {dataLoading ? (
+                    <Skeleton className="h-2 w-full" />
+                  ) : (
+                    <Progress
+                      value={progressPercentage}
+                      className="h-2 bg-zinc-100 dark:bg-zinc-800"
+                      indicatorClassName="bg-green-600"
+                    />
+                  )}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-500 dark:text-zinc-400">{progressPercentage}% Complete</span>
-                    <div className="text-right">
-                      <span className="font-mono text-zinc-500 dark:text-zinc-400">
-                        {currentAmount.toFixed(4)} / {targetAmount.toFixed(4)} ETH
-                      </span>
-                      <div className="text-xs text-zinc-500">
-                        ≈ {myrValues.totalRaised.toLocaleString()} / {myrValues.targetAmount.toLocaleString()} MYR
-                      </div>
-                    </div>
+                    {dataLoading ? (
+                      <>
+                        <Skeleton className="h-4 w-24" />
+                        <div className="text-right">
+                          <Skeleton className="h-4 w-32 ml-auto" />
+                          <Skeleton className="h-3 w-40 ml-auto mt-1" />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-zinc-500 dark:text-zinc-400">{progressPercentage}% Complete</span>
+                        <div className="text-right">
+                          <span className="font-mono text-zinc-500 dark:text-zinc-400">
+                            {currentAmount.toFixed(4)} / {targetAmount.toFixed(4)} ETH
+                          </span>
+                          <div className="text-xs text-zinc-500">
+                            ≈ {myrValues.totalRaised.toLocaleString()} / {myrValues.targetAmount.toLocaleString()} MYR
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1028,12 +1189,23 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                     <LineChart className="h-5 w-5 text-zinc-500" />
                     <div className="text-sm">
                       <div className="font-medium">Campaign Stats</div>
-                      <div className="text-zinc-500 dark:text-zinc-400">{displayTransactions.length} donations</div>
+                      <div className="text-zinc-500 dark:text-zinc-400">
+                        {dataLoading ? <Skeleton className="h-3 w-24" /> : `${displayTransactions.length} donations`}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono text-lg font-medium">{totalRaised.toFixed(4)} ETH</div>
-                    <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                    {dataLoading ? (
+                      <>
+                        <Skeleton className="h-5 w-24 ml-auto" />
+                        <Skeleton className="h-3 w-32 ml-auto mt-1" />
+                      </>
+                    ) : (
+                      <>
+                        <div className="font-mono text-lg font-medium">{totalRaised.toFixed(4)} ETH</div>
+                        <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1044,7 +1216,11 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                     <div className="text-sm">
                       <div className="font-medium text-green-700 dark:text-green-400">Currency Conversion</div>
                       <div className="text-green-600 dark:text-green-300">
-                        1 ETH ≈ {ethToMyrRate.toLocaleString()} MYR
+                        {dataLoading ? (
+                          <Skeleton className="h-4 w-32" />
+                        ) : (
+                          `1 ETH ≈ ${ethToMyrRate.toLocaleString()} MYR`
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1077,7 +1253,11 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Creation Date</span>
-                    <span className="text-xs">{contractCreationDate || "Loading..."}</span>
+                    {dataLoading ? (
+                      <Skeleton className="h-4 w-28 ml-auto" />
+                    ) : (
+                      <span className="text-xs">{contractCreationDate || "Loading..."}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -1118,49 +1298,49 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
       </div>
       {/* Security and Verification Section */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
-          {/* Wallet Security Check */}
-          <div className="bg-white rounded-lg shadow-md p-6 border border-yellow-100">
-            <div className="flex items-start">
-              <div className="bg-yellow-50 p-3 rounded-full mr-4">
-                <Shield className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Wallet Security Check</h3>
-                <p className="text-gray-600 mb-4">
-                  Don't know if the wallet is safe? Check their transaction and safety using our AI wallet security
-                  analyzer.
-                </p>
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" asChild>
-                  <Link href="/security/wallet-safety-check">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Analyze Wallet Security
-                  </Link>
-                </Button>
-              </div>
+        {/* Wallet Security Check */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-yellow-100">
+          <div className="flex items-start">
+            <div className="bg-yellow-50 p-3 rounded-full mr-4">
+              <Shield className="h-6 w-6 text-yellow-600" />
             </div>
-          </div>
-
-          {/* Company Verification */}
-          <div className="bg-white rounded-lg shadow-md p-6 border border-teal-100">
-            <div className="flex items-start">
-              <div className="bg-teal-50 p-3 rounded-full mr-4">
-                <Building2 className="h-6 w-6 text-teal-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Organization Verification</h3>
-                <p className="text-gray-600 mb-4">
-                  Don't know if the company is verified? Run a comprehensive background check on the organization.
-                </p>
-                <Button className="bg-teal-500 hover:bg-teal-600 text-white" asChild>
-                  <Link href="/security/verify-organizations">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Verify Organization
-                  </Link>
-                </Button>
-              </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Wallet Security Check</h3>
+              <p className="text-gray-600 mb-4">
+                Don't know if the wallet is safe? Check their transaction and safety using our AI wallet security
+                analyzer.
+              </p>
+              <Button className="bg-yellow-500 hover:bg-yellow-600 text-white" asChild>
+                <Link href="/security/wallet-safety-check">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Analyze Wallet Security
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
+
+        {/* Company Verification */}
+        <div className="bg-white rounded-lg shadow-md p-6 border border-teal-100">
+          <div className="flex items-start">
+            <div className="bg-teal-50 p-3 rounded-full mr-4">
+              <Building2 className="h-6 w-6 text-teal-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Organization Verification</h3>
+              <p className="text-gray-600 mb-4">
+                Don't know if the company is verified? Run a comprehensive background check on the organization.
+              </p>
+              <Button className="bg-teal-500 hover:bg-teal-600 text-white" asChild>
+                <Link href="/security/verify-organizations">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Verify Organization
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Donation Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
@@ -1176,22 +1356,51 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Target Amount</span>
                     <div className="text-right">
-                      <span className="font-mono text-sm">{targetAmount.toFixed(2)} ETH</span>
-                      <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                      {dataLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                          <Skeleton className="h-3 w-24 ml-auto mt-1" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-mono text-sm">{targetAmount.toFixed(2)} ETH</span>
+                          <div className="text-xs text-zinc-500">≈ {myrValues.targetAmount.toLocaleString()} MYR</div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Current Amount</span>
                     <div className="text-right">
-                      <span className="font-mono text-sm">{totalRaised.toFixed(4)} ETH</span>
-                      <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                      {dataLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                          <Skeleton className="h-3 w-24 ml-auto mt-1" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-mono text-sm">{totalRaised.toFixed(4)} ETH</span>
+                          <div className="text-xs text-zinc-500">≈ {myrValues.totalRaised.toLocaleString()} MYR</div>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-sm font-medium">Needed</span>
                     <div className="text-right">
-                      <span className="font-mono text-sm font-bold">{remainingAmount.toFixed(4)} ETH</span>
-                      <div className="text-xs text-zinc-500">≈ {myrValues.remainingAmount.toLocaleString()} MYR</div>
+                      {dataLoading ? (
+                        <>
+                          <Skeleton className="h-4 w-20 ml-auto" />
+                          <Skeleton className="h-3 w-24 ml-auto mt-1" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-mono text-sm font-bold">{remainingAmount.toFixed(4)} ETH</span>
+                          <div className="text-xs text-zinc-500">
+                            ≈ {myrValues.remainingAmount.toLocaleString()} MYR
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1310,5 +1519,3 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
 }
 
 export default DonationDetails
-
-
