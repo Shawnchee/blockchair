@@ -100,9 +100,9 @@ useEffect(() => {
     setImageLoaded(true)
   }
 
-  console.log("Image Pet: " + petImage)
-  console.log("Image Loaded: " + imageLoaded)
-    console.log("Image Error: " + imageError)
+  // console.log("Image Pet: " + petImage)
+  // console.log("Image Loaded: " + imageLoaded)
+  //   console.log("Image Error: " + imageError)
 
   return (
     <>
