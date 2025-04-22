@@ -29,7 +29,7 @@ export default function MilestoneIntegration({ contractAddress, contractAbi }: M
       }
 
       try {
-        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/9fbb6c926b6942b1931e85244e9964af")
+        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/139d352315cd4c96ab2c5ec31db8c776")
         const contract = new ethers.Contract(contractAddress, contractAbi, provider)
 
         // Get milestone count from contract
