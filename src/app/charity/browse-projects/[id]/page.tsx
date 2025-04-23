@@ -318,6 +318,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
           setEthToMyrRate(data.myrPrice) // Set the MYR price in state
           console.log("SET NEW ETHEREUM PRICE TO:", data.myrPrice)
         } else {
+          setEthToMyrRate(8000);
           console.error("Failed to fetch ETH to MYR rate. Status:", response.status)
         }
       } catch (error) {
@@ -1165,10 +1166,13 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                               <span className="text-muted-foreground">{progressPercentage}% Complete</span>
                               <div>
                                 <div className="font-medium">
-                                  {milestone.currentAmount.toFixed(4)} / {milestone.targetAmount.toFixed(4)} ETH
+                                  {milestone.completed ? milestone.targetAmount.toFixed(4) : milestone.currentAmount.toFixed(4)} / {milestone.targetAmount.toFixed(4)} ETH
                                 </div>
                                 <div className="text-xs text-zinc-500">
-                                  ≈ {(milestone.currentAmount * ethToMyrRate).toLocaleString()} /{" "}
+                                  ≈ {(
+                                    (milestone.completed ? milestone.targetAmount : milestone.currentAmount)
+                                    * ethToMyrRate
+                                  ).toLocaleString()} /{" "}
                                   {(milestone.targetAmount * ethToMyrRate).toLocaleString()} MYR
                                 </div>
                               </div>
