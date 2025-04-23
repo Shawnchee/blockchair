@@ -1,43 +1,46 @@
-"use client";
+"use client"
+
+import Leaderboard from "@/components/leaderboard";
+import MilestoneTrackingPersonal from "@/components/profile/milestone-tracking-personal";
+import WalletTransaction from "@/components/profile/walletTransaction";
+import supabase from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { Connection, LAMPORTS_PER_SOL, clusterApiUrl } from "@solana/web3.js";
 
-export default function SolanaBalancePage() {
-    const [balance, setBalance] = useState<number | null>(null);
-    const { publicKey, connected } = useWallet();
-    
-    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
-
+export default function profilePage(){
+    const [walletAddress,setwalletAddress] = useState<any>(null);
+    // getting their wallet address from supabase
     useEffect(() => {
-        const fetchBalance = async () => {
-            if (publicKey) {
-                try {
-                    const balanceLamports = await connection.getBalance(publicKey);
-                    setBalance(balanceLamports / LAMPORTS_PER_SOL); // Convert lamports to SOL
-                } catch (error) {
-                    console.error("Error fetching balance:", error);
-                    setBalance(null);
+        async function fetchUserDetails() {
+            try {
+                const { data: userData, error: authError } = await supabase.auth.getUser();
+                if (authError || !userData?.user) {
+                    console.error("Error fetching authenticated user:", authError);
+                    return;
                 }
+                const userId = userData.user.id;
+                const { data: userDetails, error: userError } = await supabase
+                    .from("users")
+                    .select("wallet_address")
+                    .eq("id", userId)
+                    .single();
+                if (userError || !userDetails) {
+                    console.error("Error fetching user details from Supabase:", userError);
+                    return;
+                }
+                setwalletAddress(userDetails.wallet_address);
+            } catch (error) {
+                console.error("Unexpected error fetching user details:", error);
             }
-        };
-
-        if (connected) {
-            fetchBalance();
         }
-    }, [publicKey, connected]);
+        fetchUserDetails();
+    }, []);
+
 
     return (
-        <div className="p-8 max-w-5xl pt-24 pb-8 min-h-screen mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4">Phantom Wallet Balance</h1>
-            {connected && publicKey ? (
-                <div className="p-4 border rounded-lg shadow-lg">
-                    <p><strong>Address:</strong> {publicKey.toBase58()}</p>
-                    <p><strong>Balance:</strong> {balance !== null ? `${balance.toFixed(4)} SOL` : "Loading..."}</p>
-                </div>
-            ) : (
-                <p className="text-red-500">Please connect your Phantom wallet.</p>
-            )}
+        <div className="min-h-screen pt-24">
+        <MilestoneTrackingPersonal/>
+        <WalletTransaction walletAddress={walletAddress}/>
+        <Leaderboard/>
         </div>
-    );
+    )
 }

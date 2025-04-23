@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
-import { supabase } from "../../../../lib/supabaseClient"
+import supabase from "@/utils/supabase/client"
 import { ethers } from "ethers"
 import { hexlify } from "ethers"
 
@@ -102,6 +102,7 @@ const DonationDetails: React.FC = () => {
     targetAmount: 0,
     remainingAmount: 0,
   })
+  const [user, setUser] = useState<any>(null)
 
   // New states for modal and donation process
   const [modalOpen, setModalOpen] = useState(false)
@@ -126,7 +127,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
   useEffect(() => {
     if (donation?.contract_abi && donation?.smart_contract_address) {
       try {
-        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/b7624d9f81c5486c88a86ca6f4b3ed44")
+        const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/139d352315cd4c96ab2c5ec31db8c776")
         const contract = new ethers.Contract(donation.smart_contract_address, donation.contract_abi, provider)
         setContract(contract)
       } catch (error) {
@@ -464,7 +465,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     if (!donation?.smart_contract_address) return
 
     try {
-      const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/b7624d9f81c5486c88a86ca6f4b3ed44")
+      const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/139d352315cd4c96ab2c5ec31db8c776")
       const contract = new ethers.Contract(donation.smart_contract_address, donation.contract_abi, provider)
 
       let targetAmountEth = 0
@@ -595,6 +596,27 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     }
   }, [donation?.smart_contract_address])
 
+  useEffect(() => {
+    async function fetchUserData() {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+  
+      if (sessionError || !session) {
+        console.error("No active session found:", sessionError);
+        setUser(null);
+        return;
+      }
+  
+      const { user } = session;
+      setUser(user);
+      console.log("User data fetched:", user);
+    }
+  
+    fetchUserData();
+  }, []);
+
   // Update the handleDonation function to refresh contract data after successful donation
   const handleDonation = async () => {
     if (!donationAmount || isNaN(Number(donationAmount)) || Number(donationAmount) <= 0) {
@@ -619,6 +641,50 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
       })
 
       await tx.wait()
+
+      if (!user) {
+        setTransactionResult({
+          status: "error",
+          message: "Donation successful, but failed to update user data.",
+        });
+        return;
+      }
+  
+      // Fetch the current value of `amount_eth_donated`
+      const { data: userData, error: fetchError } = await supabase
+        .from("users")
+        .select("amount_eth_donated")
+        .eq("id", user.id)
+        .single();
+  
+      if (fetchError || !userData) {
+        console.error("Error fetching user data:", fetchError);
+        setTransactionResult({
+          status: "error",
+          message: "Donation successful, but failed to update user data.",
+        });
+        return;
+      }
+  
+      const currentAmount = userData.amount_eth_donated || 0;
+      const newAmount = currentAmount + parseFloat(donationAmount);
+  
+      // Update the user's total donation amount
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ amount_eth_donated: newAmount })
+        .eq("id", user.id);
+  
+      if (updateError) {
+        console.error("Error updating Supabase:", updateError);
+        setTransactionResult({
+          status: "error",
+          message: "Donation successful, but failed to update user data.",
+        });
+        return;
+      }
+  
+      console.log("Updated user data in Supabase:", newAmount);
 
       // Refresh contract data first to get the updated total
       await fetchContractData()
