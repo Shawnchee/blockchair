@@ -3,8 +3,10 @@
 import Leaderboard from "@/components/leaderboard";
 import MilestoneTrackingPersonal from "@/components/profile/milestone-tracking-personal";
 import WalletTransaction from "@/components/profile/walletTransaction";
+import DonationReport from "@/components/profile/DonationReport";
 import supabase from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function profilePage(){
     const [walletAddress,setwalletAddress] = useState<any>(null);
@@ -38,9 +40,22 @@ export default function profilePage(){
 
     return (
         <div className="min-h-screen pt-24">
-        <MilestoneTrackingPersonal/>
-        <WalletTransaction walletAddress={walletAddress}/>
-        <Leaderboard/>
+            <MilestoneTrackingPersonal/>
+
+            <Tabs defaultValue="transactions" className="w-full max-w-7xl mx-auto mt-8">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="transactions">Transaction History</TabsTrigger>
+                    <TabsTrigger value="donations">Donation Report</TabsTrigger>
+                </TabsList>
+                <TabsContent value="transactions">
+                    <WalletTransaction walletAddress={walletAddress}/>
+                </TabsContent>
+                <TabsContent value="donations">
+                    <DonationReport walletAddress={walletAddress}/>
+                </TabsContent>
+            </Tabs>
+
+            <Leaderboard/>
         </div>
     )
 }
