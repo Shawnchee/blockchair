@@ -24,8 +24,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import supabase from "@/utils/supabase/client";
 
-export default function WalletTransaction() {
-  const walletAddress = "0x483bF34b4444dB73FB0b1b5EBDB0253A4E8b714f";
+export default function WalletTransaction({walletAddress} : {walletAddress: string}) {
+  // const walletAddress = "0x483bF34b4444dB73FB0b1b5EBDB0253A4E8b714f";
+  console.log("Wallet Address:", walletAddress);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -92,8 +93,9 @@ export default function WalletTransaction() {
   }
 
   useEffect(() => {
+    if (walletAddress)
     fetchTransactions(walletAddress);
-  }, []);
+  }, [walletAddress]);
 
   const truncateAddress = (address) => {
     if (!address) return "Contract Creation";
