@@ -30,8 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+// Import jsPDF and jspdf-autotable
 import { jsPDF } from "jspdf";
+// Add the autotable plugin
 import 'jspdf-autotable';
+// Declare the autoTable method on jsPDF instances
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 interface Transaction {
   timeStamp: string;
@@ -50,20 +58,35 @@ interface Charity {
   categories: string[];
 }
 
-export default function DonationReport({ walletAddress }: { walletAddress: string }) {
+interface DonationInsights {
+  impactStatements: string[];
+  patterns: string[];
+  suggestions: string[];
+}
+
+interface DonationReportProps {
+  walletAddress: string;
+  ethToMyr?: number;
+}
+
+export default function DonationReport({ walletAddress, ethToMyr = 12500 }: DonationReportProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [ethToMyr, setEthToMyr] = useState(12500);
+
   const [causeFilter, setCauseFilter] = useState<string>("all");
   const [causes, setCauses] = useState<string[]>([]);
+  const [insights, setInsights] = useState<DonationInsights | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
 
   async function fetchTransactions(walletAddress: string) {
-    if (!walletAddress) {
-      setError("No wallet address provided");
+    if (!walletAddress || walletAddress === "0x0000000000000000000000000000000000000000") {
+      setError("Please connect a valid wallet address");
       setLoading(false);
+      setTransactions([]);
+      setFilteredTransactions([]);
       return;
     }
 
@@ -74,12 +97,15 @@ export default function DonationReport({ walletAddress }: { walletAddress: strin
       // Fetch transactions from Etherscan API
       const url = `/api/transactions?address=${walletAddress}`;
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.status !== "1") {
-        setError(data.message || "No transactions found for the specified wallet address.");
-        setLoading(false);
-        return;
+      if (data.status !== "1" || !data.result) {
+        throw new Error(data.message || "Failed to fetch transaction data");
       }
 
       // Filter outgoing transactions
@@ -87,16 +113,25 @@ export default function DonationReport({ walletAddress }: { walletAddress: strin
         (tx) => tx.from.toLowerCase() === walletAddress.toLowerCase()
       );
 
-      // Fetch charity data from Supabase
-      const { data: charityData, error: charityError } = await supabase
-        .from("charity_2")
-        .select("id, title, smart_contract_address, categories");
+      // Fetch charity data from Supabase with retry logic
+      let charityData;
+      let charityError;
+      for (let i = 0; i < 3; i++) { // Try 3 times
+        const { data, error } = await supabase
+          .from("charity_2")
+          .select("id, title, smart_contract_address, categories");
 
-      if (charityError) {
+        if (data) {
+          charityData = data;
+          break;
+        }
+        charityError = error;
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+      }
+
+      if (charityError || !charityData) {
         console.error("Error fetching data from Supabase:", charityError);
-        setError("Failed to fetch project data. Please try again later.");
-        setLoading(false);
-        return;
+        throw new Error("Failed to fetch charity data. Please try again later.");
       }
 
       // Filter transactions that match charity smart contract addresses
@@ -109,9 +144,17 @@ export default function DonationReport({ walletAddress }: { walletAddress: strin
           )
         );
 
+      if (filteredTransactions.length === 0) {
+        setError("No donation transactions found for this wallet address");
+        setTransactions([]);
+        setFilteredTransactions([]);
+        setLoading(false);
+        return;
+      }
+
       // Extract unique causes from charity data
       const allCauses = charityData.flatMap((charity: Charity) => charity.categories || []);
-      const uniqueCauses = [...new Set(allCauses)];
+      const uniqueCauses = [...new Set(allCauses)].filter(Boolean) as string[];
       setCauses(uniqueCauses);
 
       // Add project title and cause to transactions
@@ -128,11 +171,18 @@ export default function DonationReport({ walletAddress }: { walletAddress: strin
         };
       });
 
-      setTransactions(transactionsWithDetails);
-      setFilteredTransactions(transactionsWithDetails);
+      // Sort transactions by timestamp (newest first)
+      const sortedTransactions = transactionsWithDetails.sort(
+        (a, b) => parseInt(b.timeStamp) - parseInt(a.timeStamp)
+      );
+
+      setTransactions(sortedTransactions);
+      setFilteredTransactions(sortedTransactions);
     } catch (err) {
       console.error("Error fetching transactions:", err);
-      setError("Failed to fetch transactions. Please try again later.");
+      setError(err.message || "Failed to fetch transactions. Please try again later.");
+      setTransactions([]);
+      setFilteredTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -211,183 +261,422 @@ export default function DonationReport({ walletAddress }: { walletAddress: strin
     document.body.removeChild(link);
   };
 
+  // Helper function to split long text into multiple lines for PDF
+  const splitTextIntoLines = (text: string, maxCharsPerLine: number): string[] => {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    words.forEach(word => {
+      if ((currentLine + word).length <= maxCharsPerLine) {
+        currentLine += (currentLine ? ' ' : '') + word;
+      } else {
+        lines.push(currentLine);
+        currentLine = word;
+      }
+    });
+
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  };
+
+  // Function to generate insights using OpenAI
+  const generateInsights = async () => {
+    setInsightsLoading(true);
+    try {
+      // Prepare donation data for analysis
+      const donationData = {
+        transactions: filteredTransactions.map(tx => ({
+          amount: parseFloat(formatEther(tx.value)),
+          timestamp: tx.timeStamp,
+          cause: tx.cause_name || 'Uncategorized',
+          project: tx.project_title
+        })),
+        totalDonated: parseFloat(calculateTotalDonated()),
+        donationCount: filteredTransactions.length,
+        causes: Array.from(new Set(filteredTransactions.map(tx => tx.cause_name || 'Uncategorized'))),
+        dateRange: {
+          earliest: new Date(Math.min(...filteredTransactions.map(tx => parseInt(tx.timeStamp) * 1000))).toISOString(),
+          latest: new Date(Math.max(...filteredTransactions.map(tx => parseInt(tx.timeStamp) * 1000))).toISOString()
+        }
+      };
+
+      const response = await fetch('/api/generateDonationInsights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ donationData })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate insights');
+      }
+
+      const data = await response.json();
+      setInsights(data);
+      return data;
+    } catch (error) {
+      console.error('Error generating insights:', error);
+      return null;
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
   const exportToPDF = async () => {
-    // Create a new PDF document
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+    try {
+      // Generate insights before creating PDF
+      let insightData = insights;
+      if (!insightData) {
+        insightData = await generateInsights();
+      }
 
-    // Get current date for the report
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+      // Create a simplified PDF report that's more compatible with jsPDF v3.0.1
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
 
-    // Add logo or header image (optional)
-    // If you have a logo, you can add it like this:
-    // doc.addImage('/path/to/logo.png', 'PNG', 10, 10, 40, 20);
+      // Get current date for the report
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
 
-    // Set colors and styling
-    const primaryColor = [0, 128, 128]; // Teal color
+      // Set colors and styling - using teal color (0, 128, 128)
+      const primaryColor = [0, 128, 128] as [number, number, number]; // Teal
 
-    // Add title with styling
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 30, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Donation Impact Report", doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-
-    // Add subtitle
-    doc.setFontSize(12);
-    doc.text("Your contributions are making a difference", doc.internal.pageSize.getWidth() / 2, 23, { align: 'center' });
-
-    // Reset text color for the rest of the document
-    doc.setTextColor(0, 0, 0);
-
-    // Add report date
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'italic');
-    doc.text(`Generated on: ${dateStr}`, doc.internal.pageSize.getWidth() - 20, 35, { align: 'right' });
-
-    // Add wallet information section
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text("Donor Information", 14, 45);
-
-    // Add wallet address with styling
-    doc.setDrawColor(...primaryColor);
-    doc.setLineWidth(0.5);
-    doc.line(14, 47, 80, 47);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text("Wallet Address:", 14, 55);
-    doc.setFont('courier', 'normal'); // Monospace font for the address
-    doc.text(walletAddress ? truncateAddress(walletAddress) : "Not connected", 50, 55);
-
-    // Add donation summary
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text("Donation Summary", 14, 65);
-    doc.setDrawColor(...primaryColor);
-    doc.line(14, 67, 80, 67);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-
-    // Check if we have transactions
-    if (filteredTransactions.length === 0) {
-      // No transactions case
-      doc.text("No donation transactions found.", 14, 75);
-
-      // Add information about how to make donations
+      // Add title
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, doc.internal.pageSize.width, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text("How to Make a Donation", 14, 90);
-      doc.setDrawColor(...primaryColor);
-      doc.line(14, 92, 100, 92);
+      doc.text("Donation Impact Report", 105, 18, { align: 'center' });
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.text("1. Browse charity projects on the platform", 14, 100);
-      doc.text("2. Select a project that aligns with your values", 14, 108);
-      doc.text("3. Connect your wallet and make a donation", 14, 116);
-      doc.text("4. Return to this page to view your donation impact", 14, 124);
+      // Reset text color for the rest of the document
+      doc.setTextColor(0, 0, 0);
 
-      // Add a note about impact
-      doc.setFont('helvetica', 'italic');
-      doc.text("Your donations can make a real difference in the world.", 14, 140);
-      doc.text("Start your giving journey today!", 14, 148);
-    } else {
-      // Calculate summary statistics
-      const totalDonated = calculateTotalDonated();
-      const totalMYR = (parseFloat(totalDonated) * ethToMyr).toFixed(2);
-      const donationCount = filteredTransactions.length;
+      if (filteredTransactions.length === 0) {
+        // No transactions case
+        doc.setFont('helvetica', 'normal');
+        doc.text("No donation transactions found.", 14, 65);
+        doc.text("Connect your wallet and make a donation to see your impact.", 14, 72);
+      } else {
+        // Add report date
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Generated on: ${dateStr}`, 190, 38, { align: 'right' });
 
-      // Add summary statistics
-      doc.text(`Total Donations: ${donationCount} transactions`, 14, 75);
-      doc.text(`Total Amount: ${totalDonated} ETH (${totalMYR} MYR)`, 14, 82);
+        // Add wallet information
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Wallet Address:", 14, 45);
+        doc.setFont('helvetica', 'normal');
+        doc.text(walletAddress ? truncateAddress(walletAddress) : "Not connected", 50, 45);
+        doc.text(`Full address: ${walletAddress}`, 14, 52);
 
-      // If we have cause data, add a breakdown by cause
-      if (causes.length > 0) {
+        // Calculate summary statistics
+        const totalDonated = calculateTotalDonated();
+        const totalMYR = (parseFloat(totalDonated) * ethToMyr).toFixed(2);
+        const donationCount = filteredTransactions.length;
+
         // Group transactions by cause
-        const causeBreakdown = {};
+        interface CauseGroup {
+          count: number;
+          totalETH: number;
+          totalMYR: number;
+          transactions: Transaction[];
+        }
+
+        const causeGroups: Record<string, CauseGroup> = {};
         filteredTransactions.forEach(tx => {
           const cause = tx.cause_name || "Uncategorized";
-          if (!causeBreakdown[cause]) {
-            causeBreakdown[cause] = 0;
+          if (!causeGroups[cause]) {
+            causeGroups[cause] = {
+              count: 0,
+              totalETH: 0,
+              totalMYR: 0,
+              transactions: []
+            };
           }
-          causeBreakdown[cause] += parseFloat(formatEther(tx.value));
+          causeGroups[cause].count += 1;
+          const ethAmount = parseFloat(formatEther(tx.value));
+          causeGroups[cause].totalETH += ethAmount;
+          causeGroups[cause].totalMYR += ethAmount * ethToMyr;
+          causeGroups[cause].transactions.push(tx);
         });
+
+        // Get earliest and latest donation dates
+        const dates = filteredTransactions.map(tx => parseInt(tx.timeStamp));
+        const earliestDate = new Date(Math.min(...dates) * 1000);
+        const latestDate = new Date(Math.max(...dates) * 1000);
+        const dateRange = `${earliestDate.toLocaleDateString()} - ${latestDate.toLocaleDateString()}`;
+
+        // Add donation summary section
+        doc.setFillColor(240, 250, 250);
+        doc.rect(14, 60, 180, 35, 'F');
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(14, 60, 180, 35, 'S');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text("Donation Summary", 105, 68, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.text(`Total Donations: ${donationCount} transactions`, 24, 76);
+        doc.text(`Total Amount: ${totalDonated} ETH (${totalMYR} MYR)`, 24, 83);
+        doc.text(`Date Range: ${dateRange}`, 24, 90);
 
         // Add cause breakdown section
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.text("Donation Breakdown by Cause", 14, 95);
-        doc.setDrawColor(...primaryColor);
-        doc.line(14, 97, 100, 97);
+        doc.setFontSize(14);
+        doc.text("Donation Breakdown by Cause", 105, 110, { align: 'center' });
+
+        let yPos = 120;
+        Object.entries(causeGroups).forEach(([cause, data], index) => {
+          const percentage = ((data.totalETH / parseFloat(totalDonated)) * 100).toFixed(1);
+
+          // Add cause header
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.text(`${cause} (${percentage}%)`, 24, yPos);
+
+          // Add cause details
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(10);
+          doc.text(`Donations: ${data.count}`, 34, yPos + 7);
+          doc.text(`Amount: ${data.totalETH.toFixed(6)} ETH (${data.totalMYR.toFixed(2)} MYR)`, 34, yPos + 14);
+
+          // Draw a small colored rectangle for the cause
+          doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+          doc.rect(18, yPos - 3, 4, 4, 'F');
+
+          yPos += 22;
+
+          // Add page break if needed
+          if (yPos > 250 && index < Object.entries(causeGroups).length - 1) {
+            doc.addPage();
+            yPos = 30;
+          }
+        });
+
+        // Add impact insights section
+        doc.addPage();
+
+        // Add title for impact page
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, doc.internal.pageSize.width, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Your Donation Impact", 105, 13, { align: 'center' });
+
+        // Reset text color
+        doc.setTextColor(0, 0, 0);
+
+        // Add impact insights
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text("Impact Insights", 105, 30, { align: 'center' });
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
+        doc.setFontSize(11);
 
-        let yPos = 105;
-        Object.entries(causeBreakdown).forEach(([cause, amount], index) => {
-          const percentage = ((amount as number) / parseFloat(totalDonated) * 100).toFixed(1);
-          doc.text(`${cause}: ${(amount as number).toFixed(6)} ETH (${percentage}%)`, 14, yPos);
-          yPos += 7;
+        // Add AI-generated impact statements if available, otherwise use generic ones
+        let impactYPos = 40;
+
+        if (insights && insights.impactStatements && insights.impactStatements.length > 0) {
+          // Add AI-generated impact statements
+          insights.impactStatements.forEach((statement, index) => {
+            const lines = splitTextIntoLines(statement, 80); // Split long statements into multiple lines
+            lines.forEach((line, lineIndex) => {
+              const prefix = lineIndex === 0 ? "• " : "  ";
+              doc.text(`${prefix}${line}`, 20, impactYPos + (index * 20) + (lineIndex * 7));
+            });
+            impactYPos += 10 + (lines.length * 7);
+          });
+        } else {
+          // Fallback to generic statements based on causes
+          if (causeGroups["Education"]) {
+            doc.text("• Your donations to Education have helped provide learning resources and", 20, impactYPos);
+            doc.text("  opportunities for students in need.", 20, impactYPos + 7);
+            impactYPos += 17;
+          }
+
+          if (causeGroups["Healthcare"]) {
+            doc.text("• Your contributions to Healthcare initiatives have supported medical services", 20, impactYPos);
+            doc.text("  and treatments for those who need them most.", 20, impactYPos + 7);
+            impactYPos += 17;
+          }
+
+          if (causeGroups["Environment"]) {
+            doc.text("• Your environmental donations have contributed to conservation efforts", 20, impactYPos);
+            doc.text("  and sustainability projects around the world.", 20, impactYPos + 7);
+            impactYPos += 17;
+          }
+
+          // Add generic impact for other causes
+          doc.text("• Your generosity has made a real difference in the lives of many people.", 20, impactYPos);
+          doc.text("• The transparency of blockchain ensures your donations reach their intended recipients.", 20, impactYPos + 10);
+          doc.text("• Your continued support helps build a better future for communities in need.", 20, impactYPos + 20);
+        }
+
+        // Add donation frequency insights
+        impactYPos += 35;
+        doc.setFont('helvetica', 'bold');
+        doc.text("Donation Patterns", 105, impactYPos, { align: 'center' });
+
+        // Calculate donation frequency
+        interface MonthlyData {
+          count: number;
+          total: number;
+        }
+
+        const monthlyGrouping: Record<string, MonthlyData> = {};
+        filteredTransactions.forEach(tx => {
+          const date = new Date(parseInt(tx.timeStamp) * 1000);
+          const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+
+          if (!monthlyGrouping[monthYear]) {
+            monthlyGrouping[monthYear] = {
+              count: 0,
+              total: 0
+            };
+          }
+
+          monthlyGrouping[monthYear].count += 1;
+          monthlyGrouping[monthYear].total += parseFloat(formatEther(tx.value));
         });
+
+        const monthCount = Object.keys(monthlyGrouping).length;
+        const avgDonationsPerMonth = monthCount > 0 ? (donationCount / monthCount).toFixed(1) : 0;
+
+        // Find most active cause
+        let mostActiveCause = "None";
+        let maxCount = 0;
+
+        Object.entries(causeGroups).forEach(([cause, data]) => {
+          if (data.count > maxCount) {
+            maxCount = data.count;
+            mostActiveCause = cause;
+          }
+        });
+
+        doc.setFont('helvetica', 'normal');
+        impactYPos += 10;
+
+        // Add AI-generated patterns if available, otherwise use calculated ones
+        if (insights && insights.patterns && insights.patterns.length > 0) {
+          insights.patterns.forEach((pattern, index) => {
+            const lines = splitTextIntoLines(pattern, 80);
+            lines.forEach((line, lineIndex) => {
+              const prefix = lineIndex === 0 ? "• " : "  ";
+              doc.text(`${prefix}${line}`, 20, impactYPos + (index * 15) + (lineIndex * 7));
+            });
+            impactYPos += 5 + (lines.length * 7);
+          });
+        } else {
+          // Fallback to basic patterns
+          doc.text(`• Average donations per month: ${avgDonationsPerMonth}`, 20, impactYPos);
+          doc.text(`• Most active cause: ${mostActiveCause}`, 20, impactYPos + 10);
+        }
+
+        // Add suggestions section if available
+        if (insights && insights.suggestions && insights.suggestions.length > 0) {
+          impactYPos += 30;
+          doc.setFont('helvetica', 'bold');
+          doc.text("Suggestions for Future Donations", 105, impactYPos, { align: 'center' });
+          doc.setFont('helvetica', 'normal');
+          impactYPos += 10;
+
+          insights.suggestions.forEach((suggestion, index) => {
+            const lines = splitTextIntoLines(suggestion, 80);
+            lines.forEach((line, lineIndex) => {
+              const prefix = lineIndex === 0 ? "• " : "  ";
+              doc.text(`${prefix}${line}`, 20, impactYPos + (index * 15) + (lineIndex * 7));
+            });
+            impactYPos += 5 + (lines.length * 7);
+          });
+        }
+
+        // Add transaction table
+        doc.addPage();
+
+        // Add title for transaction details page
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(0, 0, doc.internal.pageSize.width, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text("Transaction Details", 105, 13, { align: 'center' });
+
+        // Reset text color
+        doc.setTextColor(0, 0, 0);
+
+        const tableColumn = ["Date", "Project", "Cause", "Amount (ETH)", "Amount (MYR)"];
+        const tableRows = filteredTransactions.map(tx => [
+          formatDate(tx.timeStamp),
+          tx.project_title,
+          tx.cause_name || "Uncategorized",
+          parseFloat(formatEther(tx.value)).toFixed(6),
+          convertEthToMyr(formatEther(tx.value))
+        ]);
+
+        try {
+          // Add table using autoTable
+          doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 30,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: {
+              fillColor: primaryColor,
+              textColor: [255, 255, 255],
+              fontStyle: 'bold'
+            },
+            alternateRowStyles: { fillColor: [240, 250, 250] },
+            margin: { top: 10 }
+          });
+        } catch (tableError) {
+          console.error("Error creating table:", tableError);
+          // Fallback to simple text if autoTable fails
+          doc.setFont('helvetica', 'normal');
+          doc.text("Transaction data available in CSV export.", 14, 40);
+        }
       }
 
-      // Add transaction table
-      const tableColumn = ["Date", "Project", "Cause", "Amount (ETH)", "Amount (MYR)"];
-      const tableRows = filteredTransactions.map(tx => [
-        formatDate(tx.timeStamp),
-        tx.project_title,
-        tx.cause_name || "Uncategorized",
-        parseFloat(formatEther(tx.value)).toFixed(6),
-        convertEthToMyr(formatEther(tx.value))
-      ]);
+      // Add footer to all pages
+      try {
+        const pageCount = doc.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          const pageWidth = doc.internal.pageSize.width;
+          const pageHeight = doc.internal.pageSize.height;
+          doc.text('Thank you for your donations. Your generosity makes a difference.', pageWidth / 2, pageHeight - 10, { align: 'center' });
+          doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+        }
+      } catch (footerError) {
+        console.error("Error adding footer:", footerError);
+        // Continue without footer if there's an error
+      }
 
-      // Add transaction table title
-      const tableY = causes.length > 0 ? 130 : 95;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text("Transaction Details", 14, tableY - 5);
-      doc.setDrawColor(...primaryColor);
-      doc.line(14, tableY - 3, 80, tableY - 3);
-
-      // @ts-ignore - jspdf-autotable types are not included
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: tableY,
-        theme: 'grid',
-        styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [240, 250, 250] },
-        margin: { top: 10 }
-      });
+      // Save the PDF
+      doc.save("donation_impact_report.pdf");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("There was an error generating the PDF report. Please try again.");
     }
-
-    // Add footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.setTextColor(100, 100, 100);
-      const pageSize = doc.internal.pageSize;
-      const pageHeight = pageSize.getHeight();
-      doc.text('Thank you for your interest in making a positive impact.', pageSize.getWidth() / 2, pageHeight - 10, { align: 'center' });
-      doc.text(`Page ${i} of ${pageCount}`, pageSize.getWidth() / 2, pageHeight - 5, { align: 'center' });
-    }
-
-    doc.save("donation_impact_report.pdf");
   };
 
   const resetFilters = () => {
