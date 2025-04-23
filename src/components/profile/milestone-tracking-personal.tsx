@@ -37,7 +37,7 @@ export default function MilestoneTrackingPersonal({ walletAddress, contractAddre
         // Step 2: Fetch additional user details from the `users` table
         const { data: userDetails, error: userError } = await supabase
           .from("users")
-          .select("fullname, wallet_address") // Add any other fields you need
+          .select("fullname, wallet_address, amount_eth_donated") // Add any other fields you need
           .eq("id", userId)
           .single();
   
@@ -50,6 +50,7 @@ export default function MilestoneTrackingPersonal({ walletAddress, contractAddre
         setUser({
           fullname: userDetails.fullname,
           walletAddress : userDetails.wallet_address,
+          amountEthDonated: userDetails.amount_eth_donated,
         });
       } catch (error) {
         console.error("Unexpected error fetching user details:", error);
@@ -126,7 +127,7 @@ export default function MilestoneTrackingPersonal({ walletAddress, contractAddre
     return <div>Loading your contributions...</div>;
   }
 
-
+  console.log("User Details:", user);
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -147,7 +148,7 @@ export default function MilestoneTrackingPersonal({ walletAddress, contractAddre
       <CardContent>
         <div className="mb-4">
           <p className="text-lg font-medium">
-            Total Contributed: <span className="text-green-600">{totalContributed.toFixed(4)} ETH</span>
+            Total Contributed: <span className="text-green-600">{user?.amountEthDonated} ETH</span>
           </p>
         </div>
         <Table className="w-full">
