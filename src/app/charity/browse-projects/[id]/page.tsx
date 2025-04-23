@@ -42,6 +42,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import Feedback from "../../../../components/feedback"
 import LatestUpdates from "../../../../components/latest-updates"
 
 interface Donation {
@@ -1192,6 +1193,17 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
               campaignTitle={donation.title}
               isLoading={dataLoading}
             />
+
+            <Feedback
+              contractAddress={donation.smart_contract_address}
+              milestoneTransactions={milestoneTransactions}
+              campaignTitle="Example Campaign"
+            />
+                  
+
+            
+
+            
           </div>
 
           <div className="space-y-6">
@@ -1278,6 +1290,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                     )}
                   </div>
                 </div>
+
+                
 
                 {/* Currency conversion info */}
                 <div className="rounded-md bg-green-50 p-3 dark:bg-green-900/20">
@@ -1583,7 +1597,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             </div>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog>      
     </div>
   )
 }
