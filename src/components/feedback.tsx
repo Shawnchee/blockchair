@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import supabase from "@/utils/supabase/client"
+import EXIF from 'exif-js';
 
 // export interface Milestone {
 //   id: string
@@ -63,44 +64,20 @@ export default function Feedback({
   const [comments, setComments] = useState<any[]>([])
   const [groupedComments, setGroupedComments] = useState<Comment[][]>([])
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       // Querying the table data from Supabase
-  //       const { data: fetchedData, error: fetchError } = await supabase
-  //         .from('milestone')  // Replace with your table name
-  //         .select('*') 
-  //         .eq('charity_id', 4)  // Correctly using `.eq()` for equality check
-  //         .maybeSingle();
-  //       console.log("FETCHED DATA", fetchedData)
-
-  //       if (fetchError) {
-  //         throw new Error(fetchError.message); // Handle fetch errors
-  //       }
-
-  //       setMilestones(fetchedData || []);  // Setting the fetched data
-  //     } catch (error) {
-  //       console.log(error.message);  // Handle errors
-  //     } finally {
-  //       console.log(false);  // Stop the loading state
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
+  let lastValidLocation: { latitude: number; longitude: number } | null = null;
 
   const milestones = [
     {
       id: 1,
       name: "School Supplies Distribution",
-  serviceProvider: {
-    date: "May 15, 2023",
-    time: "10:00 AM - 2:00 PM",
-    venue: "Central Community Center",
-    action: "Distribution of school supplies to 20 children in need",
-    images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
-    descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
-  },
+      serviceProvider: {
+        date: "May 15, 2023",
+        time: "10:00 AM - 2:00 PM",
+        venue: "Central Community Center",
+        action: "Distribution of school supplies to 20 children in need",
+        images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
+        descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
+      },
       communityFeedback: {
         comments: [
           {
@@ -181,19 +158,20 @@ export default function Feedback({
         setGroupedComments(grouped);
         console.log("COMMENTSS NIGGA:", grouped)
       }
-      
+
     }
 
     fetchComments()
   }, []) // rerun if milestones change
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const filesArray = Array.from(event.target.files);
       const newPreviews: string[] = [];
 
       filesArray.forEach((file) => {
         const reader = new FileReader();
+
         reader.onload = (e) => {
           if (e.target?.result) {
             setImagePreviews((prev) => [...prev, e.target!.result as string]);
@@ -204,17 +182,17 @@ export default function Feedback({
 
       setImages((prev) => [...prev, ...filesArray]);
     }
-  };
+  }
 
   function calculateTotalVotes(comments: Comment[]): number {
     return getLength(comments); // Use getLength instead of comments.length
   }
-  
+
   function calculateAverageRating(comments: Comment[]): number {
     const totalComments = getLength(comments);
-    
+
     if (totalComments === 0) return 0;
-    
+
     const total = comments.reduce((sum, comment) => sum + comment.satisfaction_level, 0);
     return total / totalComments; // Use totalComments instead of comments.length
   }
@@ -230,12 +208,44 @@ export default function Feedback({
       return 0; // Return 0 if there was an error
     }
   }
+
+  const getLocation = (): Promise<{ latitude: number, longitude: number }> => {
+    return new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            resolve({ latitude, longitude });
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            reject(error);
+          }
+        );
+      } else {
+        reject(new Error("Geolocation is not supported by this browser."));
+      }
+    });
+  };
   
+
   const submitFeedback = async () => {
     const milestoneId = milestones[activeMilestone].id;
     const satisfactionLevel = parseInt(satisfactionRating);
 
     let imageUrls: string[] = [];
+
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    try {
+      const location = await getLocation();
+      latitude = location.latitude;
+      longitude = location.longitude;
+    } catch (error) {
+      console.error("Location access denied or failed:", error);
+      // You could provide a fallback here, like setting latitude/longitude to null or a default value.
+    }
 
     if (images && images.length > 0) {
       const uploads = await Promise.all(
@@ -267,6 +277,8 @@ export default function Feedback({
         image_urls: imageUrls, // change column type to text[] in your table
         milestone_id: milestoneId,
         username: "John", // replace with actual user info if available
+        latitude: latitude,
+        longitude: longitude,
       }
     ]);
 
@@ -330,7 +342,7 @@ export default function Feedback({
             {/* Service Provider Update Tab */}
             <TabsContent value="service-provider" className="space-y-4">
               <div className="rounded-lg border bg-card p-4">
-              <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
+                <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -356,7 +368,7 @@ export default function Feedback({
                   <div>
                     <span className="font-medium">Action:</span>
                     <p className="mt-1 text-sm text-muted-foreground">
-                    {milestones[activeMilestone].serviceProvider.action}
+                      {milestones[activeMilestone].serviceProvider.action}
                     </p>
                   </div>
                 </div>
@@ -411,7 +423,7 @@ export default function Feedback({
                   </div>
                 </div>
               </div>  */}
-            
+
 
               {/* Community Comments */}
               <div className="rounded-lg border bg-card p-4">
@@ -428,13 +440,13 @@ export default function Feedback({
                               alt="Feedback image"
                               width={100}
                               height={100}
-                          
+
                               className="h-24 w-24 rounded-md object-cover"
                             />
                           </div>
                         )}
                         <div className="flex-1">
-                        <p className="text-sm font-bold" >{comment.username}</p>
+                          <p className="text-sm font-bold" >{comment.username}</p>
                           <p className="text-sm">{comment.text}</p>
                         </div>
                       </div>
