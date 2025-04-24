@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           );
 
           if (possibleArrays.length > 0) {
-            recommendations = possibleArrays[0];
+            recommendations = possibleArrays[0] as any[];
           }
         }
       }
