@@ -68,7 +68,7 @@ export default function Feedback({
         time: "10:00 AM - 2:00 PM",
         venue: "Central Community Center",
         action: "Distribution of school supplies to 20 children in need",
-        images: ["/placeholder.svg?height=300&width=400", "/placeholder.svg?height=300&width=400"],
+        images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
         descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
       },
       communityFeedback: {
@@ -131,8 +131,6 @@ export default function Feedback({
       },
     },
   ]
-
-
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -339,45 +337,22 @@ export default function Feedback({
                 <div className="space-y-4">
                   {/* Camera Interface */}
                   <div className="rounded-md border p-3">
-                    <h4 className="mb-2 text-sm font-medium">Take a Photo</h4>
+                    <label htmlFor="photoInput" className="block mb-2 text-sm font-medium">Take a Photo</label>
 
-                    {!capturedImage && (
-                      <div className="space-y-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                          id="cameraInput"
-                        />
-                        <label htmlFor="cameraInput">
-                          <Button className="flex items-center gap-2">
-                            <Camera className="h-4 w-4" />
-                            Open Camera
-                          </Button>
-                        </label>
-                      </div>
-                    )}
+                    <input
+                      type="file"
+                      id="photoInput"
+                      capture="environment"
+                      accept="image/*"
+                    />
 
-                    {capturedImage && (
-                      <div className="space-y-3">
-                        <div className="overflow-hidden rounded-md">
-                          <img
-                            src={capturedImage}
-                            alt="Captured"
-                            className="h-48 w-full object-cover rounded-md border"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" onClick={resetCamera}>
-                            Retake
-                          </Button>
-                          <Button onClick={submitPhoto}>Submit Photo</Button>
-                        </div>
-                      </div>
-                    )}
+                    {/* <label htmlFor="photoInput">
+                      <button type="button" className="capture-button px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Open Camera
+                      </button>
+                    </label> */}
                   </div>
+
 
                   {/* Comment Input */}
                   <div>
