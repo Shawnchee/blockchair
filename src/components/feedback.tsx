@@ -132,51 +132,28 @@ export default function Feedback({
     },
   ]
 
-  // Start camera when in feedback mode
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
-      setStream(mediaStream)
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error)
+
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
-  // Stop camera
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
-    }
-  }
-
-  // Take a picture
-  const takePicture = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const context = canvas.getContext("2d")
-
-      if (context) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0, canvas.width, canvas.height)
-
-        const imageDataUrl = canvas.toDataURL("image/png")
-        setCapturedImage(imageDataUrl)
-        stopCamera()
-      }
-    }
-  }
-
-  // Reset camera
   const resetCamera = () => {
-    setCapturedImage(null)
-    startCamera()
-  }
+    setCapturedImage(null);
+  };
+
+  const submitPhoto = () => {
+    // Handle image upload / form submission here
+    console.log("Submitting photo:", capturedImage);
+  };
+
 
   // Submit feedback
   const submitFeedback = () => {
@@ -187,12 +164,7 @@ export default function Feedback({
     setSatisfactionRating("3")
   }
 
-  // Clean up camera on unmount
-  useEffect(() => {
-    return () => {
-      stopCamera()
-    }
-  }, [])
+
 
   return (
     <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
@@ -369,40 +341,42 @@ export default function Feedback({
                   <div className="rounded-md border p-3">
                     <h4 className="mb-2 text-sm font-medium">Take a Photo</h4>
 
-                    {!stream && !capturedImage && (
-                      <Button onClick={startCamera} className="flex items-center gap-2">
-                        <Camera className="h-4 w-4" />
-                        Open Camera
-                      </Button>
-                    )}
-
-                    {stream && !capturedImage && (
-                      <div className="space-y-3">
-                        <div className="overflow-hidden rounded-md bg-black">
-                          <video ref={videoRef} autoPlay playsInline className="h-48 w-full object-cover" />
-                        </div>
-                        <Button onClick={takePicture}>Take Photo</Button>
+                    {!capturedImage && (
+                      <div className="space-y-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="cameraInput"
+                        />
+                        <label htmlFor="cameraInput">
+                          <Button className="flex items-center gap-2">
+                            <Camera className="h-4 w-4" />
+                            Open Camera
+                          </Button>
+                        </label>
                       </div>
                     )}
 
                     {capturedImage && (
                       <div className="space-y-3">
                         <div className="overflow-hidden rounded-md">
-                          <Image
-                            src={capturedImage || "/placeholder.svg"}
-                            alt="Captured photo"
-                            width={400}
-                            height={300}
-                            className="h-48 w-full object-cover"
+                          <img
+                            src={capturedImage}
+                            alt="Captured"
+                            className="h-48 w-full object-cover rounded-md border"
                           />
                         </div>
-                        <Button variant="outline" onClick={resetCamera}>
-                          Retake Photo
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" onClick={resetCamera}>
+                            Retake
+                          </Button>
+                          <Button onClick={submitPhoto}>Submit Photo</Button>
+                        </div>
                       </div>
                     )}
-
-                    <canvas ref={canvasRef} className="hidden" />
                   </div>
 
                   {/* Comment Input */}
