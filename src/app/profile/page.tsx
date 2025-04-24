@@ -115,10 +115,10 @@ export default function profilePage(){
                 )}
 
                 <Tabs defaultValue="transactions" className="w-full mx-auto mt-8 bg-white shadow-sm rounded-lg border border-teal-100 overflow-hidden">
-                    <TabsList className="grid w-full grid-cols-3 p-1 bg-teal-50">
+                    <TabsList className="grid w-full grid-cols-3 p-1 bg-teal-50 h-16">
                         <TabsTrigger
                             value="transactions"
-                            className="data-[state=active]:bg-white data-[state=active]:text-teal-800 data-[state=active]:shadow-sm py-3"
+                            className="data-[state=active]:bg-white data-[state=active]:text-teal-800 data-[state=active]:shadow-sm py-1"
                         >
                             <ChartPieIcon className="h-4 w-4 mr-2" />
                             Transaction History
