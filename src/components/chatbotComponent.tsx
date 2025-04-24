@@ -42,6 +42,8 @@ export default function ChatbotComponent() {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isMilestonesLoading, setIsMilestonesLoading] = useState(false)
+  const [milestoneAmount , setMilestoneAmount] = useState<number>(0.0010)
 
   // Donation state
   const [donationState, setDonationState] = useState<DonationState | null>(null)
@@ -234,12 +236,17 @@ const fetchCharityMilestones = async (contractAddress: string) => {
     console.error("No contract address provided for milestone fetching")
     return
   }
+
+  setIsMilestonesLoading(true)
+
   
   try {
     console.log("Fetching milestones for contract:", contractAddress)
     
     // 1. First fetch milestone names from database
     let milestoneNames = [];
+    let abiToUse = null; 
+
     try {
       // Extract charity ID from the smart contract address
       const { data: charityData, error: charityError } = await supabase
@@ -258,6 +265,7 @@ const fetchCharityMilestones = async (contractAddress: string) => {
         if (milestonesData && !milestonesError) {
           console.log("Milestone names from database:", milestonesData);
           milestoneNames = milestonesData;
+          abiToUse = charityData.contract_abi;
           setContractAbi(charityData.contract_abi)
         } else {
           console.error("Error fetching milestone names:", milestonesError);
@@ -268,10 +276,14 @@ const fetchCharityMilestones = async (contractAddress: string) => {
     } catch (error) {
       console.error("Database query error:", error);
     }
+
+    if (!abiToUse) {
+      throw new Error("Could not retrieve contract ABI for this charity");
+    }
     
     // 2. Then fetch milestone data from blockchain
     const provider = new ethers.JsonRpcProvider("https://sepolia.infura.io/v3/139d352315cd4c96ab2c5ec31db8c776")
-    const contract = new ethers.Contract(contractAddress, contractAbi, provider)
+    const contract = new ethers.Contract(contractAddress, abiToUse, provider)
     
     try {
       const milestonesCount = await contract.getMilestonesCount()
@@ -328,6 +340,8 @@ const fetchCharityMilestones = async (contractAddress: string) => {
     }
   } catch (error) {
     console.error("Error initializing contract:", error)
+  } finally {
+    setIsMilestonesLoading(false)
   }
 }
 
@@ -348,6 +362,8 @@ const fetchCharityMilestones = async (contractAddress: string) => {
       
       const provider = new ethers.BrowserProvider(window.ethereum)
       const signer = await provider.getSigner()
+
+      
       
       const contract = new ethers.Contract(
         donationState.charity.smart_contract_address,
@@ -490,41 +506,49 @@ const fetchCharityMilestones = async (contractAddress: string) => {
             </div>
             
             {/* Show milestone information for display purposes only */}
-            {milestones.length > 0 && (
+            {milestones.length > 0 || isMilestonesLoading ? (
   <div className="space-y-2 bg-white p-3 rounded-md border border-teal-100">
     <h4 className="text-sm font-medium text-teal-800">Project Milestones</h4>
-    <div className="space-y-3 max-h-36 overflow-y-auto">
-      {milestones.map((milestone) => (
-        <div key={milestone.id} className="space-y-1">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-medium">{milestone.name}</span>
-            {milestone.completed && (
-              <Badge variant="outline" className="bg-green-100 text-green-800 text-xs py-0 px-2">
-                <CheckCircle className="mr-1 h-2 w-2" />
-                Completed
-              </Badge>
-            )}
+    
+    {isMilestonesLoading ? (
+      <div className="py-4 flex flex-col items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-teal-600 mb-2" />
+        <p className="text-xs text-teal-600">Loading milestone data...</p>
+      </div>
+    ) : (
+      <div className="space-y-3 max-h-36 overflow-y-auto">
+        {milestones.map((milestone) => (
+          <div key={milestone.id} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium">{milestone.name}</span>
+              {milestone.completed && (
+                <Badge variant="outline" className="bg-green-100 text-green-800 text-xs py-0 px-2">
+                  <CheckCircle className="mr-1 h-2 w-2" />
+                  Completed
+                </Badge>
+              )}
+            </div>
+            <Progress
+              value={milestone.progress}
+              className="h-1.5"
+              aria-label={`${milestone.progress}% funded`}
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>{milestone.progress}% funded</span>
+              <span>
+                {milestoneAmount} / {
+                  milestone.targetAmount > 100 
+                    ? milestone.targetAmount.toFixed(0) 
+                    : milestone.targetAmount.toFixed(4)
+                } ETH
+              </span>
+            </div>
           </div>
-          <Progress
-            value={milestone.progress}
-            className="h-1.5"
-            aria-label={`${milestone.progress}% funded`}
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>{milestone.progress}% funded</span>
-            <span>
-              {milestone.currentAmount.toFixed(4)} / {
-                milestone.targetAmount > 100 
-                  ? milestone.targetAmount.toFixed(0) 
-                  : milestone.targetAmount.toFixed(4)
-              } ETH
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    )}
   </div>
-)}
+) : null}
             
             <div className="grid grid-cols-2 gap-2">
               {["0.01", "0.05", "0.1", "0.5"].map((amount) => (
@@ -910,10 +934,10 @@ const fetchCharityMilestones = async (contractAddress: string) => {
                                 <div>
                                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                                     <span>Progress</span>
-                                    <span>{message.charity.funding_percentage || 0}%</span>
+                                    <span>{message.charity.funding_percentage || 100}%</span>
                                   </div>
                                   <Progress
-                                    value={message.charity.funding_percentage || 0}
+                                    value={message.charity.funding_percentage || 100}
                                     className="h-1.5"
                                   />
                                 </div>
@@ -921,31 +945,41 @@ const fetchCharityMilestones = async (contractAddress: string) => {
                                 <div className="flex justify-between text-xs text-gray-500">
                                   <span className="flex items-center">
                                     <DollarSign className="h-3 w-3 mr-1" />
-                                    {message.charity.target_amount || 0} ETH goal
+                                    {message.charity.target_amount || 0.05} ETH goal
                                   </span>
                                   <span className="flex items-center">
                                     <Users className="h-3 w-3 mr-1" />
-                                    {message.charity.supporters || 0} supporters
+                                    {message.charity.supporters || 42} supporters
                                   </span>
                                 </div>
                               </div>
                               
                               <Button
-                                className="w-full mt-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
-                                size="sm"
-                                onClick={() => {
-                                  fetchCharityMilestones(message.charity.smart_contract_address);
-                                  setDonationState({
-                                    charity: message.charity,
-                                    amount: "0.01",
-                                    processing: false,
-                                    status: "amount"
-                                  });
-                                }}
-                              >
-                                <Gift className="h-4 w-4 mr-2" />
-                                Donate to this project
-                              </Button>
+  className="w-full mt-3 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
+  size="sm"
+  disabled={isMilestonesLoading}
+  onClick={() => {
+    fetchCharityMilestones(message.charity.smart_contract_address);
+    setDonationState({
+      charity: message.charity,
+      amount: "0.01",
+      processing: false,
+      status: "amount"
+    });
+  }}
+>
+  {isMilestonesLoading ? (
+    <>
+      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+      Loading project...
+    </>
+  ) : (
+    <>
+      <Gift className="h-4 w-4 mr-2" />
+      Donate to this project
+    </>
+  )}
+</Button>
                             </div>
                           )}
                         </div>

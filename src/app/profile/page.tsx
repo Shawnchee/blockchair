@@ -11,6 +11,7 @@ import supabase from "@/utils/supabase/client";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCircle, ChartPieIcon, Sparkles, Calculator } from "lucide-react";
+import InteractiveMap from "@/components/profile/InteractiveMap";
 
 export default function profilePage(){
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export default function profilePage(){
                         <span>Donor Profile</span>
                     </h1>
                     <MilestoneTrackingPersonal/>
+                    <InteractiveMap />
                 </div>
 
                 {walletAddress && (
