@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import supabase from "@/utils/supabase/client"
 import EXIF from 'exif-js';
+import ServiceProviderCard from "./ServiceProviderCard";
 
 // export interface Milestone {
 //   id: string
@@ -227,7 +228,7 @@ export default function Feedback({
       }
     });
   };
-  
+
 
   const submitFeedback = async () => {
     const milestoneId = milestones[activeMilestone].id;
@@ -341,35 +342,42 @@ export default function Feedback({
 
             {/* Service Provider Update Tab */}
             <TabsContent value="service-provider" className="space-y-4">
-              <div className="rounded-lg border bg-card p-4">
-                <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
+              {/* Service Provider and Milestone Details side by side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Service Provider Card */}
+                <ServiceProviderCard />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Date:</span>
-                      <span>{milestones[activeMilestone].serviceProvider.date}</span>
+                {/* Milestone Details Card */}
+                <div className="rounded-lg border bg-card p-4">
+                  <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
+
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Date:</span>
+                        <span>{milestones[activeMilestone].serviceProvider.date}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Time:</span>
+                        <span>{milestones[activeMilestone].serviceProvider.time}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Venue:</span>
+                        <span>{milestones[activeMilestone].serviceProvider.venue}</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Time:</span>
-                      <span>{milestones[activeMilestone].serviceProvider.time}</span>
+                    <div>
+                      <span className="font-medium">Action:</span>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {milestones[activeMilestone].serviceProvider.action}
+                      </p>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Venue:</span>
-                      <span>{milestones[activeMilestone].serviceProvider.venue}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="font-medium">Action:</span>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {milestones[activeMilestone].serviceProvider.action}
-                    </p>
                   </div>
                 </div>
               </div>

@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import Feedback from "../../../../components/feedback"
 import LatestUpdates from "../../../../components/latest-updates"
+import OrganizationDetailsPopup from "@/components/OrganizationDetailsPopup"
 
 interface Donation {
   id: string
@@ -58,6 +59,9 @@ interface Donation {
   contract_abi: object[]
   problem_statement?: string
   organization_info?: string
+  verified?: boolean
+  trust_score?: number
+  location?: string
 }
 
 export interface ServiceProvider {
@@ -152,7 +156,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     }
   }, [donation?.contract_abi, donation?.smart_contract_address])
 
-  
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -241,7 +245,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         setOffChainMilestones(milestonesData)
         setTransactions(transactionsData || [])
 
-        
+
       } catch (error) {
         console.error("Error fetching data:", error)
 
@@ -622,18 +626,18 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession();
-  
+
       if (sessionError || !session) {
         console.error("No active session found:", sessionError);
         setUser(null);
         return;
       }
-  
+
       const { user } = session;
       setUser(user);
       console.log("User data fetched:", user);
     }
-  
+
     fetchUserData();
   }, []);
 
@@ -669,14 +673,14 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         });
         return;
       }
-  
+
       // Fetch the current value of `amount_eth_donated`
       const { data: userData, error: fetchError } = await supabase
         .from("users")
         .select("amount_eth_donated")
         .eq("id", user.id)
         .single();
-  
+
       if (fetchError || !userData) {
         console.error("Error fetching user data:", fetchError);
         setTransactionResult({
@@ -685,16 +689,16 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         });
         return;
       }
-  
+
       const currentAmount = userData.amount_eth_donated || 0;
       const newAmount = currentAmount + parseFloat(donationAmount);
-  
+
       // Update the user's total donation amount
       const { error: updateError } = await supabase
         .from("users")
         .update({ amount_eth_donated: newAmount })
         .eq("id", user.id);
-  
+
       if (updateError) {
         console.error("Error updating Supabase:", updateError);
         setTransactionResult({
@@ -703,7 +707,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         });
         return;
       }
-  
+
       console.log("Updated user data in Supabase:", newAmount);
 
       // Refresh contract data first to get the updated total
@@ -774,21 +778,41 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
               </div>
               <div>
                 <div className="text-xs text-emerald-100 mb-0.5 font-medium">Organization</div>
-                <span className="font-semibold text-white">{donation.organization_name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white">{donation.organization_name}</span>
+                  {donation.verified && (
+                    <Badge variant="outline" className="bg-blue-500/20 text-white border-blue-300/30 flex items-center gap-1 py-0 h-5">
+                      <CheckCircle className="h-3 w-3" />
+                      Verified
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
-            {donation.websiteurl && (
-              <Link
-                href={donation.websiteurl}
-                target="_blank"
-                className="flex items-center ml-auto px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
-              >
-                <Globe className="h-4 w-4 mr-2 text-emerald-300" />
-                <span>{donation.websiteurl.replace(/^https?:\/\//, "")}</span>
-                <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
-              </Link>
-            )}
+            <div className="flex items-center gap-2 ml-auto">
+              {donation.websiteurl && (
+                <Link
+                  href={donation.websiteurl}
+                  target="_blank"
+                  className="flex items-center px-3 py-1.5 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-black text-sm transition-colors duration-200"
+                >
+                  <Globe className="h-4 w-4 mr-2 text-emerald-300" />
+                  <span>{donation.websiteurl.replace(/^https?:\/\//, "")}</span>
+                  <ExternalLink className="h-3 w-3 ml-1.5 text-emerald-300" />
+                </Link>
+              )}
+
+              <OrganizationDetailsPopup
+                name={donation.organization_name}
+                description={donation.organization_info || ""}
+                verified={donation.verified || false}
+                trustScore={donation.trust_score || 4.5}
+                location={donation.location || "Global"}
+                website={donation.websiteurl?.replace(/^https?:\/\//, "")}
+                email="contact@example.org"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -1218,11 +1242,11 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
               // milestoneTransactions={offChainMilestones}
               campaignTitle="Example Campaign"
             />
-                  
 
-            
 
-            
+
+
+
           </div>
 
           <div className="space-y-6">
@@ -1310,7 +1334,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
                   </div>
                 </div>
 
-                
+
 
                 {/* Currency conversion info */}
                 <div className="rounded-md bg-green-50 p-3 dark:bg-green-900/20">
@@ -1616,7 +1640,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             </div>
           )}
         </DialogContent>
-      </Dialog>      
+      </Dialog>
     </div>
   )
 }
