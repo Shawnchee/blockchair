@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
-import { Calendar, Camera, Upload } from "lucide-react"
-
+import { Calendar, Upload } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,18 +10,20 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import supabase from "@/utils/supabase/client"
 
-interface MilestoneTransaction {
-  index: number
-  name: string
-  targetAmount: number
-  txHash: string
-  wallet: string
-  company_name: string
-  websiteurl: string
-}
+// export interface Milestone {
+//   id: string
+//   charity_id: string
+//   milestone_name: string
+//   target_amount: number
+//   company_name: string
+//   funds_raised: number
+//   status: "pending" | "completed"
+//   service_provider: ServiceProvider
+// }
 
-interface ServiceProviderUpdate {
+export interface ServiceProvider {
   date: string
   time: string
   venue: string
@@ -31,22 +32,24 @@ interface ServiceProviderUpdate {
   descriptions: string[]
 }
 
-interface CommunityFeedback {
-  comments: { text: string; image?: string }[]
-  satisfactionRating: number
-  totalVotes: number
+interface Comment {
+  id: string
+  text?: string
+  satisfaction_level: number
+  latitude?: number
+  longitude?: number
+  milestone_id: number
+  created_at?: string
+  username?: string
+  image_urls?: string[]
 }
 
 interface LatestUpdatesProps {
-  contractAddress: string
-  milestoneTransactions: MilestoneTransaction[]
   campaignTitle: string
   isLoading?: boolean
 }
 
 export default function Feedback({
-  contractAddress,
-  milestoneTransactions,
   campaignTitle,
   isLoading = false,
 }: LatestUpdatesProps) {
@@ -55,22 +58,49 @@ export default function Feedback({
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [comment, setComment] = useState("")
   const [satisfactionRating, setSatisfactionRating] = useState<string>("3")
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [comments, setComments] = useState<any[]>([])
+  const [groupedComments, setGroupedComments] = useState<Comment[][]>([])
 
-  // Sample milestone data - in a real app, this would come from your database
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       // Querying the table data from Supabase
+  //       const { data: fetchedData, error: fetchError } = await supabase
+  //         .from('milestone')  // Replace with your table name
+  //         .select('*') 
+  //         .eq('charity_id', 4)  // Correctly using `.eq()` for equality check
+  //         .maybeSingle();
+  //       console.log("FETCHED DATA", fetchedData)
+
+  //       if (fetchError) {
+  //         throw new Error(fetchError.message); // Handle fetch errors
+  //       }
+
+  //       setMilestones(fetchedData || []);  // Setting the fetched data
+  //     } catch (error) {
+  //       console.log(error.message);  // Handle errors
+  //     } finally {
+  //       console.log(false);  // Stop the loading state
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
   const milestones = [
     {
       id: 1,
       name: "School Supplies Distribution",
-      serviceProvider: {
-        date: "May 15, 2023",
-        time: "10:00 AM - 2:00 PM",
-        venue: "Central Community Center",
-        action: "Distribution of school supplies to 20 children in need",
-        images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
-        descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
-      },
+  serviceProvider: {
+    date: "May 15, 2023",
+    time: "10:00 AM - 2:00 PM",
+    venue: "Central Community Center",
+    action: "Distribution of school supplies to 20 children in need",
+    images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
+    descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
+  },
       communityFeedback: {
         comments: [
           {
@@ -132,36 +162,129 @@ export default function Feedback({
     },
   ]
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCapturedImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    const fetchComments = async () => {
+      const { data, error } = await supabase
+        .from('communitycomments')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error("Error fetching comments:", error.message)
+        return
+      }
+
+      if (Array.isArray(data)) {
+        const grouped: Comment[][] = milestones.map(milestones => {
+          return data.filter(comment => comment.milestone_id === milestones.id)
+        });
+        setGroupedComments(grouped);
+        console.log("COMMENTSS NIGGA:", grouped)
+      }
+      
+    }
+
+    fetchComments()
+  }, []) // rerun if milestones change
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const filesArray = Array.from(event.target.files);
+      const newPreviews: string[] = [];
+
+      filesArray.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setImagePreviews((prev) => [...prev, e.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      setImages((prev) => [...prev, ...filesArray]);
     }
   };
 
-  const resetCamera = () => {
-    setCapturedImage(null);
-  };
-
-  const submitPhoto = () => {
-    // Handle image upload / form submission here
-    console.log("Submitting photo:", capturedImage);
-  };
-
-
-  // Submit feedback
-  const submitFeedback = () => {
-    // In a real app, you would send this data to your backend
-    alert("Feedback submitted successfully!")
-    setCapturedImage(null)
-    setComment("")
-    setSatisfactionRating("3")
+  function calculateTotalVotes(comments: Comment[]): number {
+    return getLength(comments); // Use getLength instead of comments.length
+  }
+  
+  function calculateAverageRating(comments: Comment[]): number {
+    const totalComments = getLength(comments);
+    
+    if (totalComments === 0) return 0;
+    
+    const total = comments.reduce((sum, comment) => sum + comment.satisfaction_level, 0);
+    return total / totalComments; // Use totalComments instead of comments.length
   }
 
+  function getLength(comments: Comment[]): number {
+    try {
+      if (!Array.isArray(comments)) {
+        throw new Error("Expected an array of comments.");
+      }
+      return comments.length;
+    } catch (error) {
+      console.error("Error in getLength function:", error);
+      return 0; // Return 0 if there was an error
+    }
+  }
+  
+  const submitFeedback = async () => {
+    const milestoneId = milestones[activeMilestone].id;
+    const satisfactionLevel = parseInt(satisfactionRating);
+
+    let imageUrls: string[] = [];
+
+    if (images && images.length > 0) {
+      const uploads = await Promise.all(
+        images.map(async (imageFile) => {
+          const filePath = `communityphoto/${Date.now()}-${imageFile.name}`;
+
+          const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from("communityphoto")
+            .upload(filePath, imageFile);
+
+          if (uploadError) {
+            console.error("Image upload failed:", uploadError);
+            return null;
+          }
+
+          return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/communityphoto/${uploadData.path}`;
+        })
+      );
+
+      // Remove any null entries from failed uploads
+      imageUrls = uploads.filter((url): url is string => url !== null);
+    }
+
+    const { error } = await supabase.from("communitycomments").insert([
+      {
+        text: comment,
+        satisfaction_level: satisfactionLevel,
+        image_urls: imageUrls, // change column type to text[] in your table
+        milestone_id: milestoneId,
+        username: "John", // replace with actual user info if available
+      }
+    ]);
+
+    if (error) {
+      console.error("Error submitting feedback:", error);
+      alert("Failed to submit feedback. Please try again.");
+    } else {
+      alert("Feedback submitted successfully!");
+      setComment("");
+      setSatisfactionRating("3");
+      setImages([]);
+      setImagePreviews([]);
+    }
+  };
+
+  // const activeComments = groupedComments[activeMilestone];
+  // const totalVotes = calculateTotalVotes(activeComments);
+  // const averageRating = calculateAverageRating(activeComments);
 
 
   return (
@@ -207,7 +330,7 @@ export default function Feedback({
             {/* Service Provider Update Tab */}
             <TabsContent value="service-provider" className="space-y-4">
               <div className="rounded-lg border bg-card p-4">
-                <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
+              <h3 className="mb-4 text-lg font-medium">{milestones[activeMilestone].name} Details</h3>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -233,7 +356,7 @@ export default function Feedback({
                   <div>
                     <span className="font-medium">Action:</span>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {milestones[activeMilestone].serviceProvider.action}
+                    {milestones[activeMilestone].serviceProvider.action}
                     </p>
                   </div>
                 </div>
@@ -262,71 +385,62 @@ export default function Feedback({
                   ))}
                 </div>
 
-                {/* For service providers to upload new images - in a real app, this would be protected */}
-                <div className="mt-6 rounded-md border border-dashed p-6">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
-                    <h3 className="text-sm font-medium">Upload implementation photos</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Drag and drop or click to upload photos of your charity action
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-4">
-                      Upload Photos
-                    </Button>
-                  </div>
-                </div>
               </div>
             </TabsContent>
 
             {/* Community Feedback Tab */}
             <TabsContent value="community-feedback" className="space-y-4">
               {/* Satisfaction Rating */}
-              <div className="rounded-lg border bg-card p-4">
+              {/* { <div className="rounded-lg border bg-card p-4">
                 <h3 className="mb-2 text-lg font-medium">Community Satisfaction</h3>
 
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <Progress
-                      value={milestones[activeMilestone].communityFeedback.satisfactionRating * 20}
+                      value={milestones.communityFeedback. * 20}
                       className="h-4"
                     />
                   </div>
                   <div className="text-right">
                     <span className="text-lg font-bold">
-                      {milestones[activeMilestone].communityFeedback.satisfactionRating.toFixed(1)}/5
+                      {averageRating}
                     </span>
                     <p className="text-xs text-muted-foreground">
-                      Based on {milestones[activeMilestone].communityFeedback.totalVotes} votes
+                      Based on {totalVotes} votes
                     </p>
                   </div>
                 </div>
-              </div>
+              </div>  */}
+            
 
               {/* Community Comments */}
               <div className="rounded-lg border bg-card p-4">
                 <h3 className="mb-4 text-lg font-medium">Community Feedback</h3>
 
                 <div className="space-y-4">
-                  {milestones[activeMilestone].communityFeedback.comments.map((comment, idx) => (
-                    <div key={idx} className="rounded-md border p-3">
+                  {groupedComments[activeMilestone]?.map((comment, idx) => (
+                    <div key={comment.id || idx} className="rounded-md border p-3">
                       <div className="flex gap-4">
-                        {comment.image && (
+                        {comment.image_urls?.[0] && (
                           <div className="hidden sm:block">
                             <Image
-                              src={comment.image || "/placeholder.svg"}
+                              src={comment.image_urls[0]}
                               alt="Feedback image"
                               width={100}
                               height={100}
+                          
                               className="h-24 w-24 rounded-md object-cover"
                             />
                           </div>
                         )}
                         <div className="flex-1">
+                        <p className="text-sm font-bold" >{comment.username}</p>
                           <p className="text-sm">{comment.text}</p>
                         </div>
                       </div>
                     </div>
                   ))}
+
                 </div>
               </div>
 
@@ -342,16 +456,49 @@ export default function Feedback({
                     <input
                       type="file"
                       id="photoInput"
-                      capture="environment"
                       accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={handleImageChange}
                     />
 
-                    {/* <label htmlFor="photoInput">
-                      <button type="button" className="capture-button px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        Open Camera
-                      </button>
-                    </label> */}
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('photoInput').click()}
+                      className="bg-[#0CD0A6] hover:bg-[#0AB993] text-white font-medium py-2 px-4 rounded-full w-full flex items-center justify-center gap-2 transition-colors"
+                    >
+                      Open Camera
+                    </button>
                   </div>
+
+                  {imagePreviews.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative w-full border rounded-md overflow-hidden">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-auto max-h-[400px] object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedImages = images.filter((_, i) => i !== index);
+                              const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+                              setImages(updatedImages);
+                              setImagePreviews(updatedPreviews);
+                            }}
+                            className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-red-100 transition-colors"
+                          >
+                            <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
 
 
                   {/* Comment Input */}

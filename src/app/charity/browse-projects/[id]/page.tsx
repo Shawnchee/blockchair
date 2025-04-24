@@ -60,7 +60,16 @@ interface Donation {
   organization_info?: string
 }
 
-interface Milestone {
+export interface ServiceProvider {
+  date: string
+  time: string
+  venue: string
+  action: string
+  images: string[]
+  descriptions: string[]
+}
+
+export interface Milestone {
   id: string
   charity_id: string
   milestone_name: string
@@ -68,7 +77,12 @@ interface Milestone {
   company_name: string
   funds_raised: number
   status: "pending" | "completed"
+  service_provider: ServiceProvider
 }
+
+
+
+
 
 interface Transaction {
   id?: string
@@ -87,6 +101,7 @@ interface Transaction {
 const DonationDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const [donation, setDonation] = useState<Donation | null>(null)
+  const [offChainMilestones, setOffChainMilestones] = useState<Milestone[]>([])
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -137,6 +152,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     }
   }, [donation?.contract_abi, donation?.smart_contract_address])
 
+  
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -162,10 +179,6 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             problem_statement: defaultProblemStatement,
             organization_info: defaultOrganizationInfo,
           })
-          const { data: milestonesData, error: milestonesError } = await supabase
-            .from("milestone")
-            .select("*")
-            .eq("charity_2_id", id)
 
           setLoading(false)
           // Simulate data loading delay
@@ -195,6 +208,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         if (milestonesError) console.error("Milestone fetch error:", milestonesError)
         if (transactionsError) console.error("Transaction fetch error:", transactionsError)
 
+        console.log("AaAAAAAAAAAAAA: ", offChainMilestones)
+
         // Use sample data if in development and no data is returned
         if (!donationData && process.env.NODE_ENV === "development") {
           // Sample donation data for development
@@ -223,7 +238,10 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         }
 
         setMilestones(milestonesData || [])
+        setOffChainMilestones(milestonesData)
         setTransactions(transactionsData || [])
+
+        
       } catch (error) {
         console.error("Error fetching data:", error)
 
@@ -330,7 +348,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     fetchEthToMyrRate()
 
     // Set up an interval to refresh the rate periodically
-    const intervalId = setInterval(fetchEthToMyrRate, 10000) // Every 10 seconds (you can adjust this as needed)
+    const intervalId = setInterval(fetchEthToMyrRate, 100000) // Every 10 seconds (you can adjust this as needed)
 
     return () => clearInterval(intervalId) // Cleanup the interval on component unmount
   }, [])
@@ -560,6 +578,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         }
 
         setMilestonesOnChain(milestones)
+        console.log("Testing milstone contents here:  ", milestones)
       } catch (error) {
         console.error("Error fetching milestones for display:", error)
       }
@@ -1195,8 +1214,8 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
             />
 
             <Feedback
-              contractAddress={donation.smart_contract_address}
-              milestoneTransactions={milestoneTransactions}
+              // contractAddress={donation.smart_contract_address}
+              // milestoneTransactions={offChainMilestones}
               campaignTitle="Example Campaign"
             />
                   

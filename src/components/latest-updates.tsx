@@ -62,50 +62,11 @@ export default function LatestUpdates({
   return (
     <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-medium">Latest Updates</CardTitle>
-        <CardDescription>Stay informed about the progress and impact of your donations</CardDescription>
+        <CardTitle className="text-xl font-medium">Milestone Transfers</CardTitle>
+        <CardDescription>Stay informed about the flow of your donation funds</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="impact">
-          <TabsList className="mb-4">
-            <TabsTrigger value="impact">Impact Stories</TabsTrigger>
-            <TabsTrigger value="milestones">Milestone Transfers</TabsTrigger>
-          </TabsList>
-
-          {/* Impact Stories Tab */}
-          <TabsContent value="impact" className="space-y-4">
-            {impactStories.map((story) => (
-              <div key={story.id} className="rounded-lg border bg-card p-4">
-                <div className="flex items-start gap-4">
-                  <div className="rounded-full bg-primary/10 p-2">
-                    <story.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">{story.title}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {story.category}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{story.description}</p>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Calendar className="mr-1 h-3 w-3" />
-                      {story.date}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {impactStories.length === 0 && (
-              <div className="rounded-lg border bg-card p-6 text-center">
-                <p className="text-muted-foreground">No impact stories available yet. Check back soon!</p>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Milestone Transfers Tab */}
-          <TabsContent value="milestones" className="space-y-4">
+      {/* Milestone Transfers Tab */}
+      <CardContent className="space-y-4">
             {isLoading ? (
               // Skeleton loading state for milestones
               Array(3)
@@ -171,8 +132,6 @@ export default function LatestUpdates({
                 <p className="text-muted-foreground">No milestone transfers have been completed yet.</p>
               </div>
             )}
-          </TabsContent>
-        </Tabs>
       </CardContent>
     </Card>
   )
