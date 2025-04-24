@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Award, Heart, Calendar, Zap, TrendingUp, Target, Clock, Users, Sparkles } from "lucide-react"
 import { formatEther } from "ethers"
+import supabase from "@/utils/supabase/client"
 
 interface AchievementBadgesProps {
   walletAddress: string
