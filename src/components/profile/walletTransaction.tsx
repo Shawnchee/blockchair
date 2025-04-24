@@ -24,13 +24,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import supabase from "@/utils/supabase/client";
 
-export default function WalletTransaction({walletAddress} : {walletAddress: string}) {
-  // const walletAddress = "0x483bF34b4444dB73FB0b1b5EBDB0253A4E8b714f";
+interface WalletTransactionProps {
+  walletAddress: string;
+  ethToMyr?: number;
+}
+
+export default function WalletTransaction({ walletAddress, ethToMyr = 12500 }: WalletTransactionProps) {
   console.log("Wallet Address:", walletAddress);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [ethToMyr, setEthToMyr] = useState(12500);
 
   async function fetchTransactions(walletAddress) {
     try {
@@ -152,7 +155,7 @@ export default function WalletTransaction({walletAddress} : {walletAddress: stri
               {walletAddress}
             </code>
           </div>
-          
+
         </CardHeader>
         <CardContent>
           {loading ? (

@@ -18,9 +18,11 @@ interface DonationProps {
   cover_image: string
   total_amount: number
   organization_name: string
+  ethToMyrRate?: number
 }
 
-const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_image, total_amount, organization_name }) => (
+const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_image, total_amount, organization_name, ethToMyrRate = 8000 }) => (
+  // Default fallback rate of 8000 MYR per ETH if not provided
   <Link href={`/charity/browse-projects/${id}`} passHref>
     <div className="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       <div className="relative">
@@ -40,8 +42,8 @@ const DonationCard: React.FC<DonationProps> = ({ id, title, location, cover_imag
           {organization_name || "Anonymous Organization"}
         </p>
         <p className="text-teal-600 font-bold mt-2 flex items-center">
-          <Heart className="h-4 w-4 mr-1 fill-teal-600 stroke-teal-600" />$
-          {total_amount ? total_amount.toLocaleString() : "0"} goal
+          <Heart className="h-4 w-4 mr-1 fill-teal-600 stroke-teal-600" /> 
+          MYR {total_amount ? (total_amount * ethToMyrRate).toLocaleString() : "0"} goal
         </p>
       </div>
     </div>
@@ -135,6 +137,35 @@ const DonationPageContent = () => {
   const [donations, setDonations] = useState<DonationProps[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [showSuccess, setShowSuccess] = useState<boolean>(false)
+  const [ethToMyrRate, setEthToMyrRate] = useState<number>(8000) // Default fallback value
+
+  // Fetch ETH to MYR conversion rate
+  useEffect(() => {
+    const fetchEthToMyrRate = async () => {
+      try {
+        const response = await fetch("/api/ethConversion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setEthToMyrRate(data.myrPrice) // Set the MYR price in state
+          console.log("SET NEW ETHEREUM PRICE TO:", data.myrPrice)
+        } else {
+          console.error("Failed to fetch ETH to MYR rate. Status:", response.status)
+          // Keep using the default fallback value
+        }
+      } catch (error) {
+        console.error("Error fetching ETH to MYR rate:", error)
+        // Keep using the default fallback value
+      }
+    }
+
+    fetchEthToMyrRate()
+  }, [])
 
   useEffect(() => {
     // Check if success parameter is present
@@ -207,7 +238,7 @@ const DonationPageContent = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {donations.map((donation) => (
-            <DonationCard key={donation.id} {...donation} />
+            <DonationCard key={donation.id} {...donation} ethToMyrRate={ethToMyrRate} />
           ))}
         </div>
       )}
