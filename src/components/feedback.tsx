@@ -233,9 +233,6 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
 
   function getLength(comments: Comment[]): number {
     try {
-      if (!Array.isArray(comments)) {
-        throw new Error("Expected an array of comments.")
-      }
       return comments.length
     } catch (error) {
       console.error("Error in getLength function:", error)

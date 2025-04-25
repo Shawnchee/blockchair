@@ -138,11 +138,15 @@ const DonationDetails: React.FC = () => {
   const [milestoneTransactions, setMilestoneTransactions] = useState([])
 
   // Sample problem statement and organization info
-  const defaultProblemStatement = `Digital exclusion is a barrier preventing individuals from accessing opportunities and seeking financial support. Research shows people from the lowest socio-economic groups are unable to apply for public aid as they lack access to the internet, cell phones and computers, nor have the knowledge of how to use the devices. During the Covid-19 pandemic, more than 20% of people were unable to seek support due to digital exclusion.
+  const defaultProblemStatement = `When a powerful earthquake struck Jakarta, countless lives were upended in an instant. Homes were destroyed, families were displaced, and basic necessities became scarce. Vulnerable communities — especially those in low-income and densely populated areas — have been hit the hardest.
+
+The Disaster Relief Fund is dedicated to providing immediate and long-term assistance to individuals and families affected by this devastating event. Our efforts include delivering emergency supplies, food, clean water, temporary shelters, and support for rebuilding homes and livelihoods.
+
+We are working hand-in-hand with local volunteers and trusted partners on the ground to ensure timely and effective aid distribution. Every donation helps bring hope, safety, and stability back to those impacted, allowing them to begin the journey of recovery with dignity.
 
 Most vulnerable homeless people are disadvantaged by this even further, as there is an absence of public digital centers in developing countries. This leads to limited access to computers and with it the opportunities and aid it brings, as well as contributing to losing connection with family and friends.`
 
-  const defaultOrganizationInfo = `Our organization, founded in 2018, seeks to educate homeless and socially vulnerable people in urban areas. Among various forms of support, we provide professional training for people in vulnerable conditions, with an emphasis on personal development and generating a source of income.`
+  const defaultOrganizationInfo = `Founded in 2018, our organization is dedicated to supporting individuals and communities facing social and economic hardship. We specialize in providing urgent aid and long-term support to those affected by natural disasters, homelessness, and digital exclusion.`
 
   useEffect(() => {
     if (donation?.contract_abi && donation?.smart_contract_address) {
@@ -211,8 +215,6 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
         if (donationError) console.error("Donation fetch error:", donationError)
         if (milestonesError) console.error("Milestone fetch error:", milestonesError)
         if (transactionsError) console.error("Transaction fetch error:", transactionsError)
-
-        console.log("AaAAAAAAAAAAAA: ", offChainMilestones)
 
         // Use sample data if in development and no data is returned
         if (!donationData && process.env.NODE_ENV === "development") {
