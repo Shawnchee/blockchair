@@ -87,31 +87,35 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
   const milestones = [
     {
       id: 1,
-      name: "School Supplies Distribution",
+      name: "Land Preparation and Surveying",
       serviceProvider: {
-        date: "May 15, 2023",
+        date: "May 15, 2025",
         time: "10:00 AM - 2:00 PM",
-        venue: "Central Community Center",
-        action: "Distribution of school supplies to 20 children in need",
+        venue: "7, Jalan Shah, Jalan Sungai Dua, 11900 Penang",
+        action: "Initial clearing of land and boundary surveying for the school construction site",
         images: [
-          "https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg",
-          "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp",
+          "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-land-preparation-and-surveying-1.jpg",
+          "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-land-preparation-and-surveying-2.jpg"
         ],
-        descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
+        descriptions: ["Volunteers clearing vegetation", "Survey team marking site boundaries"],
       },
       communityFeedback: {
         comments: [
           {
-            text: "It was wonderful to see the children's faces light up when they received their supplies!",
+            text: "Excited to see the project finally starting!",
             image: "/placeholder.svg?height=200&width=300",
           },
           {
-            text: "The organization was excellent, no long waiting times.",
+            text: "Smooth process, everyone worked hard.",
             image: "/placeholder.svg?height=200&width=300",
-          },
+          }
         ],
-        satisfactionRating: 4.2,
-        totalVotes: 15,
+        satisfactionRating: 4.4,
+        totalVotes: 10,
+      },
+      location: {
+        latitude: 5.4804,
+        longitude: 100.4228,
       },
       // Location coordinates for this milestone
       location: {
@@ -121,51 +125,60 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     },
     {
       id: 2,
-      name: "Community Outreach Program",
+      name: "Foundation and Structural Work",
       serviceProvider: {
-        date: "April 28, 2023",
-        time: "9:00 AM - 3:00 PM",
-        venue: "Riverside Park",
-        action: "Community outreach program serving meals and providing basic necessities",
-        images: ["/placeholder.svg?height=300&width=400"],
-        descriptions: ["Volunteers serving meals to community members"],
+        date: "June 10, 2025",
+        time: "9:00 AM - 4:00 PM",
+        venue: "7, Jalan Shah, Jalan Sungai Dua, 11900 Penang",
+        action: "Laying of foundation, concrete pouring, and column erection",
+        images: [
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-foundation-and-structural-work-1.jpeg",
+          "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-foundation-and-structural-work-2.jpg"
+        ],
+        descriptions: ["Concrete being poured for foundation", "Team erecting structural frames"],
       },
       communityFeedback: {
         comments: [
           {
-            text: "The food was great and the volunteers were very friendly!",
+            text: "Great progress, the site is taking shape!",
             image: "/placeholder.svg?height=200&width=300",
-          },
+          }
         ],
-        satisfactionRating: 4.5,
+        satisfactionRating: 4.6,
         totalVotes: 8,
       },
-      // Location coordinates for this milestone
       location: {
-        latitude: 14.6091,
-        longitude: 120.9822, // Nearby Manila coordinates
+        latitude: 5.4804,
+        longitude: 100.4228,
       },
     },
     {
       id: 3,
-      name: "Healthcare Initiative",
+      name: "Electrical and Plumbing Installation",
       serviceProvider: {
-        date: "April 10, 2023",
-        time: "1:00 PM - 5:00 PM",
-        venue: "Downtown Health Clinic",
-        action: "Providing basic medical supplies and services to underserved communities",
-        images: ["/placeholder.svg?height=300&width=400", "/placeholder.svg?height=300&width=400"],
-        descriptions: ["Medical professionals providing check-ups", "Distribution of medical supplies"],
+        date: "July 5, 2025",
+        time: "10:00 AM - 3:00 PM",
+        venue: "7, Jalan Shah, Jalan Sungai Dua, 11900 Penang",
+        action: "Installation of wiring, switches, pipes, and water systems",
+        images: [
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-electrical-and-plumbing-installation-1.jpg",
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-electrical-and-plumbing-installation-2.jpg"
+        ],
+        descriptions: ["Technicians installing power lines", "Workers connecting plumbing fixtures"],
       },
       communityFeedback: {
         comments: [
           {
-            text: "The medical staff was very professional and caring.",
+            text: "All utilities look professionally installed!",
             image: "/placeholder.svg?height=200&width=300",
-          },
+          }
         ],
-        satisfactionRating: 4.8,
-        totalVotes: 12,
+        satisfactionRating: 4.7,
+        totalVotes: 9,
+      },
+      location: {
+        latitude: 5.4804,
+        longitude: 100.4228,
       },
       // Location coordinates for this milestone
       location: {
@@ -173,7 +186,66 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
         longitude: 101.633149436231, // Makati coordinates as example
       },
     },
-  ]
+    {
+      id: 4,
+      name: "Painting and Furnishing",
+      serviceProvider: {
+        date: "August 2, 2025",
+        time: "10:00 AM - 5:00 PM",
+        venue: "7, Jalan Shah, Jalan Sungai Dua, 11900 Penang",
+        action: "Interior and exterior painting, furniture placement, and decor",
+        images: [
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-painting-and-furnishing-1.jpg",
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-painting-and-furnishing-2.jpg"
+        ],
+        descriptions: ["Volunteers painting classrooms", "Tables and chairs being arranged"],
+      },
+      communityFeedback: {
+        comments: [
+          {
+            text: "Everything is starting to look like a real school!",
+            image: "/placeholder.svg?height=200&width=300",
+          }
+        ],
+        satisfactionRating: 4.9,
+        totalVotes: 11,
+      },
+      location: {
+        latitude: 5.4804,
+        longitude: 100.4228,
+      },
+    },
+    {
+      id: 5,
+      name: "School Supplies and Equipment",
+      serviceProvider: {
+        date: "August 28, 2025",
+        time: "9:00 AM - 12:00 PM",
+        venue: "7, Jalan Shah, Jalan Sungai Dua, 11900 Penang",
+        action: "Setup of books, computers, classroom materials, and school kits",
+        images: [
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-school-supplies-and-equipment-1.jpg",
+           "https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/project-assets//project-4-school-supplies-and-equipment-2.jpg"
+        ],
+        descriptions: ["Children receiving school kits", "New computers installed in IT room"],
+      },
+      communityFeedback: {
+        comments: [
+          {
+            text: "The kids are thrilled with the new supplies!",
+            image: "/placeholder.svg?height=200&width=300",
+          }
+        ],
+        satisfactionRating: 5.0,
+        totalVotes: 14,
+      },
+      location: {
+        latitude: 5.4804,
+        longitude: 100.4228,
+      },
+    }
+  ];
+  
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -233,9 +305,6 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
 
   function getLength(comments: Comment[]): number {
     try {
-      if (!Array.isArray(comments)) {
-        throw new Error("Expected an array of comments.")
-      }
       return comments.length
     } catch (error) {
       console.error("Error in getLength function:", error)
@@ -635,7 +704,7 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
                     <div key={comment.id || idx} className="rounded-md border p-3">
                       <div className="flex gap-4">
                         {comment.image_urls?.[0] && (
-                          <div className="hidden sm:block">
+                          <div className="block">
                             <Image
                               src={comment.image_urls[0] || "/placeholder.svg"}
                               alt="Feedback image"
