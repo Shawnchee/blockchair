@@ -84,10 +84,6 @@ export interface Milestone {
   service_provider: ServiceProvider
 }
 
-
-
-
-
 interface Transaction {
   id?: string
   charity_id?: string
@@ -160,8 +156,6 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
     }
   }, [donation?.contract_abi, donation?.smart_contract_address])
 
-
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -206,6 +200,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
           .from("milestone")
           .select("*")
           .eq("charity_id", id)
+          .order("created_at", { ascending: true });
 
         const { data: transactionsData, error: transactionsError } = await supabase
           .from("transaction_history")
