@@ -1,6 +1,5 @@
 "use client"
 
-import Leaderboard from "@/components/leaderboard";
 import MilestoneTrackingPersonal from "@/components/profile/milestone-tracking-personal";
 import MilestoneRewards from "@/components/profile/MilestoneRewards";
 import WalletTransaction from "@/components/profile/walletTransaction";
@@ -181,8 +180,7 @@ export default function profilePage(){
                 </Tabs>
 
                 <div className="mt-8 bg-white shadow-sm rounded-lg border border-teal-100 overflow-hidden">
-                    <Leaderboard/>
-                </div>
+                    </div>
             </div>
         </div>
     )
