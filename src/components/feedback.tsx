@@ -120,6 +120,11 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
         latitude: 5.4804,
         longitude: 100.4228,
       },
+      // Location coordinates for this milestone
+      location: {
+        latitude: 14.5995,
+        longitude: 120.9842, // Manila coordinates as example
+      },
     },
     {
       id: 2,
@@ -183,6 +188,11 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
       location: {
         latitude: 5.4804,
         longitude: 100.4228,
+      },
+      // Location coordinates for this milestone
+      location: {
+        latitude: 3.1299430170212,
+        longitude: 101.633149436231, // Makati coordinates as example
       },
     },
     {
