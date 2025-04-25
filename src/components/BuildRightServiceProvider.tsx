@@ -623,20 +623,6 @@ export default function BuildRightServiceProvider() {
                   <Button variant="outline" className="w-full">Download Profile</Button>
                 </div>
 
-                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
-                  <h4 className="text-sm font-medium text-amber-800 mb-2 flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Business Hours
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-amber-700">
-                    <div>Monday - Friday:</div>
-                    <div>9:00 AM - 5:30 PM</div>
-                    <div>Saturday:</div>
-                    <div>9:00 AM - 1:00 PM</div>
-                    <div>Sunday:</div>
-                    <div>Closed</div>
-                  </div>
-                </div>
               </div>
             </TabsContent>
           </Tabs>

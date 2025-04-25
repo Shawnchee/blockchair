@@ -181,14 +181,6 @@ export default function ServiceProviderCard() {
         completed_date: "2023-02-10",
         provider_wallet_address: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t"
       },
-      {
-        id: 3,
-        title: "Learning Hub in Johor Bahru",
-        description: "Construction of a learning hub with modern facilities",
-        image_url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?ixlib=rb-4.0.3",
-        completed_date: "2023-08-22",
-        provider_wallet_address: "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t"
-      }
     ]
 
     setProjects(fallbackProjects)
@@ -612,20 +604,7 @@ export default function ServiceProviderCard() {
                   <Button variant="outline" className="w-full">Download Profile</Button>
                 </div>
 
-                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
-                  <h4 className="text-sm font-medium text-amber-800 mb-2 flex items-center">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Business Hours
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-amber-700">
-                    <div>Monday - Friday:</div>
-                    <div>9:00 AM - 5:30 PM</div>
-                    <div>Saturday:</div>
-                    <div>9:00 AM - 1:00 PM</div>
-                    <div>Sunday:</div>
-                    <div>Closed</div>
-                  </div>
-                </div>
+        
               </div>
             </TabsContent>
           </Tabs>
