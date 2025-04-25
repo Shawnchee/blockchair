@@ -34,6 +34,10 @@ At the heart of BlockChair is a smart contract-based milestone release system, w
 
 With an emphasis on AI-driven safety, analytics, and personalization, BlockChair offers a suite of intelligent tools that improve user experience, vet charitable organizations, and optimize fundraising efforts.
 
+## 📄 Documentation
+
+- **Onboarding Guide / Developer Docs**: [View Documentation](https://dermanow.gitbook.io/blockchair-docs/developer-documentation/blockchair-developer-documentation)
+
 ## 🌟 Key Features
 
 ### 🔐 Blockchain-Based Donation System
