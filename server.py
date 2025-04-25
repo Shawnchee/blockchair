@@ -5,6 +5,8 @@ import pickle
 import spacy
 import re
 import math
+import time
+import random
 import Levenshtein
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -264,6 +266,12 @@ print("API startup complete")
 
 # Function to preprocess query - enhanced with advanced NLP techniques
 query_cache = {}
+# Add cache timestamp tracking to invalidate old entries
+query_cache_timestamps = {}
+# Maximum cache size to prevent memory issues
+MAX_CACHE_SIZE = 100
+# Cache expiration time in seconds (5 minutes)
+CACHE_EXPIRATION = 300
 
 # Define charity-specific synonyms for better matching
 charity_synonyms = {
@@ -277,10 +285,8 @@ charity_synonyms = {
     "rights": ["human rights", "civil rights", "advocacy", "justice"],
     "research": ["scientific", "study", "investigation", "development"],
     "community": ["local", "neighborhood", "social", "society"],
-    "veterans": ["military", "soldiers", "armed forces", "service members"],
-    "elderly": ["seniors", "aging", "older adults", "retirement"],
-    "women": ["gender equality", "girls", "female", "maternal"],
-    "refugees": ["asylum seekers", "displaced persons", "migrants"],
+    "veterans": ["military", "soldiers", "armed forces", "service members", "veteran", "veterans affairs", "wounded warriors", "military families", "disabled veterans", "war veterans", "ex-servicemen", "ex-military"],
+    "military": ["veterans", "armed forces", "defense", "service members", "soldiers"],
     "arts": ["culture", "music", "theater", "creative", "artistic"],
     "religion": ["faith", "spiritual", "church", "worship"],
     "international": ["global", "worldwide", "foreign", "developing countries"],
@@ -290,9 +296,19 @@ charity_synonyms = {
 }
 
 def preprocess_query(text):
-    # Check cache first
+    # Check cache first, but only if it's not expired
+    current_time = time.time()
     if text in query_cache:
-        return query_cache[text]
+        # Check if cache entry is still valid
+        if text in query_cache_timestamps and current_time - query_cache_timestamps[text] < CACHE_EXPIRATION:
+            print(f"Using cached query processing for: '{text}'")
+            return query_cache[text]
+        else:
+            # Cache entry expired, remove it
+            if text in query_cache:
+                del query_cache[text]
+            if text in query_cache_timestamps:
+                del query_cache_timestamps[text]
 
     # Normalize text - lowercase and strip extra whitespace
     normalized_text = " ".join(text.lower().split())
@@ -401,8 +417,22 @@ def preprocess_query(text):
         "contextual_info": contextual_info
     }
 
-    # Cache the result
+    # Cache the result with timestamp
+    current_time = time.time()
     query_cache[text] = result
+    query_cache_timestamps[text] = current_time
+
+    # Manage cache size to prevent memory issues
+    if len(query_cache) > MAX_CACHE_SIZE:
+        # Remove oldest entries
+        oldest_queries = sorted(query_cache_timestamps.items(), key=lambda x: x[1])[:len(query_cache) // 4]
+        for old_query, _ in oldest_queries:
+            if old_query in query_cache:
+                del query_cache[old_query]
+            if old_query in query_cache_timestamps:
+                del query_cache_timestamps[old_query]
+        print(f"Cache cleaned: removed {len(oldest_queries)} oldest entries")
+
     return result
 
 # Function to get semantic similarity with advanced techniques
@@ -623,21 +653,49 @@ def match_focus_areas(query_info):
 
 # Advanced prediction function with state-of-the-art scoring and filtering
 def predict_charities(user_input, top_n=5):
+    print(f"Processing charity prediction for query: '{user_input}'")
+
+    # Add a small amount of randomness to ensure different results each time
+    randomization_seed = int(time.time()) % 10000
+    random.seed(randomization_seed)
+    print(f"Using randomization seed: {randomization_seed}")
+
     # Preprocess the query with advanced NLP
     query_info = preprocess_query(user_input)
 
     # Get semantic similarity matches with enhanced techniques
     semantic_matches = get_semantic_similarity(query_info)
     semantic_charity_ids = {charity_id: score for charity_id, score in semantic_matches}
+    print(f"Found {len(semantic_charity_ids)} semantic matches")
 
     # Get focus area matches with fuzzy matching
     focus_matches = match_focus_areas(query_info)
     focus_charity_ids = {charity_id: score for charity_id, score in focus_matches}
+    print(f"Found {len(focus_charity_ids)} focus area matches")
 
     # Combine all matching charity IDs
     all_charity_ids = set(semantic_charity_ids.keys()).union(set(focus_charity_ids.keys()))
+    print(f"Combined unique charity matches: {len(all_charity_ids)}")
+
+    # If we don't have enough matches, add some random charities to ensure diversity
+    if len(all_charity_ids) < top_n * 2:
+        # Get some random charity IDs from our dataset
+        available_ids = list(charity_lookup.keys())
+        # Shuffle to ensure randomness
+        random.shuffle(available_ids)
+        # Add random charities until we have at least twice the requested number
+        for charity_id in available_ids:
+            if charity_id not in all_charity_ids:
+                all_charity_ids.add(charity_id)
+                # Add with low scores to both matching methods
+                semantic_charity_ids[charity_id] = 0.1 + (random.random() * 0.2)  # Random score between 0.1-0.3
+                focus_charity_ids[charity_id] = 0.1 + (random.random() * 0.2)     # Random score between 0.1-0.3
+                if len(all_charity_ids) >= top_n * 3:  # Get 3x the requested number for good diversity
+                    break
+        print(f"Added random charities, new total: {len(all_charity_ids)}")
 
     if not all_charity_ids:
+        print("No matching charities found, returning empty list")
         return []
 
     # Calculate final scores and prepare results
@@ -652,10 +710,13 @@ def predict_charities(user_input, top_n=5):
         charity_info = charity_lookup[charity_id]
 
         # Get model prediction score (if available)
+        model_score = 0.5  # Default score
         try:
-            model_score = best_model.predict(1, charity_id).est
-        except:
-            model_score = 0.5  # Default score
+            if best_model is not None:
+                model_score = best_model.predict(1, charity_id).est
+        except Exception as model_error:
+            print(f"Model prediction error for charity {charity_id}: {str(model_error)}")
+            # Keep using the default score
 
         # Get semantic similarity score (if available)
         semantic_score = semantic_charity_ids.get(charity_id, 0)
@@ -751,10 +812,20 @@ def predict_charities(user_input, top_n=5):
         if len(charity_info["focus_areas_list"]) >= 3:
             relevance *= 1.04  # 4% boost for having 3+ focus areas
 
+        # Add veteran-specific boost
+        if any(term in user_input.lower() for term in ["veteran", "veterans", "military", "service member", "armed forces"]):
+            if charity_info["focus_areas_list"] and any(area.lower() in ["veterans", "military", "armed forces"] for area in charity_info["focus_areas_list"]):
+                relevance *= 1.25  # 25% boost for veteran-focused charities when searching for veteran causes
+
         # Store raw score for outlier detection
         raw_scores.append(relevance)
 
         # Create recommendation object with enhanced details
+        # Handle potential NaN values in website field
+        website = charity_info.get("website", None)
+        if website is not None and (isinstance(website, float) and math.isnan(website)):
+            website = None
+
         recommendation = {
             "charityId": int(charity_info["charityId"]),
             "name": charity_info["name"],
@@ -768,7 +839,7 @@ def predict_charities(user_input, top_n=5):
                 "focus_score": float(focus_score),
                 "model_score": float(model_score)
             },
-            "website": charity_info.get("website", None)  # Include website URL
+            "website": website  # Include website URL with NaN check
         }
 
         final_recommendations.append(recommendation)
@@ -778,6 +849,17 @@ def predict_charities(user_input, top_n=5):
 
     # Apply post-processing to ensure diversity and quality
     if len(final_recommendations) > top_n:
+        print(f"Applying diversity post-processing to {len(final_recommendations)} recommendations")
+
+        # Add a small random factor to scores to break ties and add variety
+        for rec in final_recommendations:
+            # Add up to 5% random variation to scores
+            random_factor = 1.0 + ((random.random() * 0.1) - 0.05)  # -5% to +5%
+            rec["relevance_score"] *= random_factor
+
+        # Re-sort after adding randomness
+        final_recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+
         # Get the top recommendations
         top_recommendations = final_recommendations[:top_n]
 
@@ -786,40 +868,129 @@ def predict_charities(user_input, top_n=5):
 
         # If all top recommendations are of the same match type, try to add diversity
         if len(set(match_types)) == 1 and len(final_recommendations) > top_n + 3:
+            print("All top recommendations have the same match type, adding diversity")
             # Find recommendations with different match types
             diverse_candidates = [rec for rec in final_recommendations[top_n:top_n+10]
                                 if rec["match_details"]["match_type"] != match_types[0]]
 
-            # If we found diverse candidates, replace the lowest-scoring top recommendation
+            # If we found diverse candidates, replace some of the lower-scoring top recommendations
             if diverse_candidates:
-                # Replace the lowest-scoring recommendation with the highest-scoring diverse candidate
-                top_recommendations = top_recommendations[:-1] + [diverse_candidates[0]]
+                # Replace up to 2 of the lowest-scoring recommendations with diverse candidates
+                num_to_replace = min(2, len(diverse_candidates))
+                top_recommendations = top_recommendations[:-num_to_replace] + diverse_candidates[:num_to_replace]
                 # Re-sort by relevance score
                 top_recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+                print(f"Added {num_to_replace} diverse recommendations")
 
+        # Also check for name diversity to avoid similar charities
+        charity_names = [rec["name"].lower() for rec in top_recommendations]
+        if len(set(charity_names)) < len(charity_names):
+            print("Detected potential duplicate charity names, attempting to diversify")
+            # Find unique names by keeping track of what we've seen
+            seen_names = set()
+            unique_recommendations = []
+
+            for rec in top_recommendations:
+                name_lower = rec["name"].lower()
+                if name_lower not in seen_names:
+                    seen_names.add(name_lower)
+                    unique_recommendations.append(rec)
+
+            # If we removed duplicates, fill in with other recommendations
+            if len(unique_recommendations) < top_n and len(final_recommendations) > top_n:
+                # Find recommendations not already in our unique set
+                additional_recs = [rec for rec in final_recommendations[top_n:]
+                                  if rec["name"].lower() not in seen_names]
+
+                # Add as many as needed to reach top_n
+                needed = top_n - len(unique_recommendations)
+                unique_recommendations.extend(additional_recs[:needed])
+
+                # Re-sort by relevance score
+                unique_recommendations.sort(key=lambda x: x["relevance_score"], reverse=True)
+                print(f"Removed duplicate names and added {min(needed, len(additional_recs))} new recommendations")
+
+            # Use our deduplicated recommendations if we have any
+            if unique_recommendations:
+                top_recommendations = unique_recommendations
+
+        print(f"Returning {len(top_recommendations)} diverse recommendations")
         return top_recommendations
     else:
+        print(f"Returning all {len(final_recommendations)} recommendations (not enough for diversity processing)")
         return final_recommendations
 
 # API Endpoint: Predict Charities
 @app.get("/predict", response_model=List[Charity], summary="Get charity recommendations")
 async def predict(
     query: str = Query(..., description="The cause or interest"),
-    top_n: int = Query(8, description="Number of results to return", ge=1, le=20)
+    top_n: int = Query(8, description="Number of results to return", ge=1, le=20),
+    randomize: bool = Query(True, description="Whether to add randomization to results")
 ):
     if not query:
         raise HTTPException(status_code=400, detail="Query parameter is required")
 
     try:
         # Log the incoming request for monitoring
-        print(f"Processing charity recommendation request: '{query}', top_n={top_n}")
+        print(f"Processing charity recommendation request: '{query}', top_n={top_n}, randomize={randomize}")
+
+        # Add a timestamp-based seed for randomization
+        if randomize:
+            # Use millisecond precision for better randomness
+            random.seed(int(time.time() * 1000) % 10000)
+            print(f"Using time-based randomization seed: {int(time.time() * 1000) % 10000}")
 
         # Get recommendations with the requested number of results
         recommendations = predict_charities(query, top_n=top_n)
 
         if not recommendations:
             print(f"No recommendations found for query: '{query}'")
-            return []
+            # Instead of returning empty list, try to get some random charities as fallback
+            try:
+                print("Attempting to return random charities as fallback")
+                # Get all available charity IDs
+                available_ids = list(charity_lookup.keys())
+
+                # Shuffle to ensure randomness
+                random.shuffle(available_ids)
+
+                # Take the first top_n IDs
+                fallback_ids = available_ids[:min(top_n, len(available_ids))]
+
+                # Create recommendation objects for these IDs
+                fallback_recommendations = []
+                for charity_id in fallback_ids:
+                    charity_info = charity_lookup[charity_id]
+
+                    # Handle potential NaN values in website field
+                    website = charity_info.get("website", None)
+                    if website is not None and (isinstance(website, float) and math.isnan(website)):
+                        website = None
+
+                    # Create a basic recommendation
+                    recommendation = {
+                        "charityId": int(charity_info["charityId"]),
+                        "name": charity_info["name"],
+                        "description": charity_info["description"],
+                        "focus_areas": charity_info["focus_areas_list"],
+                        "relevance_score": 0.5,  # Neutral score
+                        "match_details": {
+                            "match_type": "fallback",
+                            "match_strength": 0.5,
+                            "semantic_score": 0.5,
+                            "focus_score": 0.5,
+                            "model_score": 0.5
+                        },
+                        "website": website
+                    }
+
+                    fallback_recommendations.append(recommendation)
+
+                print(f"Returning {len(fallback_recommendations)} fallback recommendations")
+                return fallback_recommendations
+            except Exception as fallback_error:
+                print(f"Error generating fallback recommendations: {str(fallback_error)}")
+                return []
 
         print(f"Returning {len(recommendations)} recommendations for query: '{query}'")
         return recommendations

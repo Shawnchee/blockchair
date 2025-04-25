@@ -2,6 +2,7 @@
 
 import Leaderboard from "@/components/leaderboard";
 import MilestoneTrackingPersonal from "@/components/profile/milestone-tracking-personal";
+import MilestoneRewards from "@/components/profile/MilestoneRewards";
 import WalletTransaction from "@/components/profile/walletTransaction";
 import DonationReport from "@/components/profile/DonationReport";
 import PersonalizedRecommendations from "@/components/profile/PersonalizedRecommendations";
@@ -111,7 +112,12 @@ export default function profilePage(){
                 </div>
 
                 {walletAddress && (
-                    <PersonalizedRecommendations walletAddress={walletAddress} />
+                    <>
+                        <div className="mt-8">
+                            <MilestoneRewards walletAddress={walletAddress} ethToMyr={ethToMyr} />
+                        </div>
+                        <PersonalizedRecommendations walletAddress={walletAddress} />
+                    </>
                 )}
 
                 <Tabs defaultValue="transactions" className="w-full mx-auto mt-8 bg-white shadow-sm rounded-lg border border-teal-100 overflow-hidden">
