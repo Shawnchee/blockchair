@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Calendar, Upload } from "lucide-react"
+import { Calendar, MapPin, Star } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,19 +13,11 @@ import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import supabase from "@/utils/supabase/client"
-import EXIF from 'exif-js';
-import ServiceProviderCard from "./ServiceProviderCard";
-
-// export interface Milestone {
-//   id: string
-//   charity_id: string
-//   milestone_name: string
-//   target_amount: number
-//   company_name: string
-//   funds_raised: number
-//   status: "pending" | "completed"
-//   service_provider: ServiceProvider
-// }
+import ServiceProviderCard from "./ServiceProviderCard"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { LoaderIcon, CheckCircle, XCircle } from "lucide-react"
+import { format } from "date-fns"
+import { motion, AnimatePresence } from "framer-motion"
 
 export interface ServiceProvider {
   date: string
@@ -51,21 +45,44 @@ interface LatestUpdatesProps {
   isLoading?: boolean
 }
 
-export default function Feedback({
-  campaignTitle,
-  isLoading = false,
-}: LatestUpdatesProps) {
+export default function Feedback({ campaignTitle, isLoading = false }: LatestUpdatesProps) {
   const [activeMilestone, setActiveMilestone] = useState(0)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [comment, setComment] = useState("")
   const [satisfactionRating, setSatisfactionRating] = useState<string>("3")
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [comments, setComments] = useState<any[]>([])
   const [groupedComments, setGroupedComments] = useState<Comment[][]>([])
+  const [submissionStatus, setSubmissionStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  let lastValidLocation: { latitude: number; longitude: number } | null = null;
+  const lastValidLocation: { latitude: number; longitude: number } | null = null
+
+  // Control modal visibility based on submission status
+  useEffect(() => {
+    if (submissionStatus !== "idle") {
+      setIsModalOpen(true)
+    }
+  }, [submissionStatus])
+
+  // Handle auto-closing of success/error states
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+
+    if (submissionStatus === "success" || submissionStatus === "error") {
+      timer = setTimeout(() => {
+        setIsModalOpen(false)
+        // Only reset the status after the modal closing animation completes
+        setTimeout(() => setSubmissionStatus("idle"), 300)
+      }, 2000)
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [submissionStatus])
 
   const milestones = [
     {
@@ -76,7 +93,10 @@ export default function Feedback({
         time: "10:00 AM - 2:00 PM",
         venue: "Central Community Center",
         action: "Distribution of school supplies to 20 children in need",
-        images: ["https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg", "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp"],
+        images: [
+          "https://news.digitalmarketingphilippines.com/wp-content/uploads/2020/10/1200-X-628-FEATURED-IMAGE-scaled.jpeg",
+          "https://news.digitalmarketingphilippines.com/wp-content/uploads/2022/09/Artboard-51-1-1024x980.webp",
+        ],
         descriptions: ["Volunteers preparing backpacks with supplies", "Children receiving their new school supplies"],
       },
       communityFeedback: {
@@ -92,6 +112,11 @@ export default function Feedback({
         ],
         satisfactionRating: 4.2,
         totalVotes: 15,
+      },
+      // Location coordinates for this milestone
+      location: {
+        latitude: 14.5995,
+        longitude: 120.9842, // Manila coordinates as example
       },
     },
     {
@@ -115,6 +140,11 @@ export default function Feedback({
         satisfactionRating: 4.5,
         totalVotes: 8,
       },
+      // Location coordinates for this milestone
+      location: {
+        latitude: 14.6091,
+        longitude: 120.9822, // Nearby Manila coordinates
+      },
     },
     {
       id: 3,
@@ -137,15 +167,20 @@ export default function Feedback({
         satisfactionRating: 4.8,
         totalVotes: 12,
       },
+      // Location coordinates for this milestone
+      location: {
+        latitude: 3.1299430170212,
+        longitude: 101.633149436231, // Makati coordinates as example
+      },
     },
   ]
 
   useEffect(() => {
     const fetchComments = async () => {
       const { data, error } = await supabase
-        .from('communitycomments')
-        .select('*')
-        .order('created_at', { ascending: false })
+        .from("communitycomments")
+        .select("*")
+        .order("created_at", { ascending: false })
 
       if (error) {
         console.error("Error fetching comments:", error.message)
@@ -153,13 +188,12 @@ export default function Feedback({
       }
 
       if (Array.isArray(data)) {
-        const grouped: Comment[][] = milestones.map(milestones => {
-          return data.filter(comment => comment.milestone_id === milestones.id)
-        });
-        setGroupedComments(grouped);
+        const grouped: Comment[][] = milestones.map((milestones) => {
+          return data.filter((comment) => comment.milestone_id === milestones.id)
+        })
+        setGroupedComments(grouped)
         console.log("COMMENTSS NIGGA:", grouped)
       }
-
     }
 
     fetchComments()
@@ -167,108 +201,107 @@ export default function Feedback({
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const filesArray = Array.from(event.target.files);
-      const newPreviews: string[] = [];
+      const filesArray = Array.from(event.target.files)
 
       filesArray.forEach((file) => {
-        const reader = new FileReader();
+        const reader = new FileReader()
 
         reader.onload = (e) => {
           if (e.target?.result) {
-            setImagePreviews((prev) => [...prev, e.target!.result as string]);
+            setImagePreviews((prev) => [...prev, e.target!.result as string])
           }
-        };
-        reader.readAsDataURL(file);
-      });
+        }
+        reader.readAsDataURL(file)
+      })
 
-      setImages((prev) => [...prev, ...filesArray]);
+      setImages((prev) => [...prev, ...filesArray])
     }
   }
 
   function calculateTotalVotes(comments: Comment[]): number {
-    return getLength(comments); // Use getLength instead of comments.length
+    return getLength(comments) // Use getLength instead of comments.length
   }
 
   function calculateAverageRating(comments: Comment[]): number {
-    const totalComments = getLength(comments);
+    const totalComments = getLength(comments)
 
-    if (totalComments === 0) return 0;
+    if (totalComments === 0) return 0
 
-    const total = comments.reduce((sum, comment) => sum + comment.satisfaction_level, 0);
-    return total / totalComments; // Use totalComments instead of comments.length
+    const total = comments.reduce((sum, comment) => sum + comment.satisfaction_level, 0)
+    return total / totalComments // Use totalComments instead of comments.length
   }
 
   function getLength(comments: Comment[]): number {
     try {
       if (!Array.isArray(comments)) {
-        throw new Error("Expected an array of comments.");
+        throw new Error("Expected an array of comments.")
       }
-      return comments.length;
+      return comments.length
     } catch (error) {
-      console.error("Error in getLength function:", error);
-      return 0; // Return 0 if there was an error
+      console.error("Error in getLength function:", error)
+      return 0 // Return 0 if there was an error
     }
   }
 
-  const getLocation = (): Promise<{ latitude: number, longitude: number }> => {
+  const getLocation = (): Promise<{ latitude: number; longitude: number }> => {
     return new Promise((resolve, reject) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            const { latitude, longitude } = position.coords;
-            resolve({ latitude, longitude });
+            const { latitude, longitude } = position.coords
+            resolve({ latitude, longitude })
           },
           (error) => {
-            console.error("Error getting location:", error);
-            reject(error);
-          }
-        );
+            console.error("Error getting location:", error)
+            reject(error)
+          },
+        )
       } else {
-        reject(new Error("Geolocation is not supported by this browser."));
+        reject(new Error("Geolocation is not supported by this browser."))
       }
-    });
-  };
-
+    })
+  }
 
   const submitFeedback = async () => {
-    const milestoneId = milestones[activeMilestone].id;
-    const satisfactionLevel = parseInt(satisfactionRating);
+    setSubmissionStatus("loading") // Show loading modal
 
-    let imageUrls: string[] = [];
+    const milestoneId = milestones[activeMilestone].id
+    const satisfactionLevel = Number.parseInt(satisfactionRating)
 
-    let latitude: number | null = null;
-    let longitude: number | null = null;
+    let imageUrls: string[] = []
+
+    let latitude: number | null = null
+    let longitude: number | null = null
 
     try {
-      const location = await getLocation();
-      latitude = location.latitude;
-      longitude = location.longitude;
+      const location = await getLocation()
+      latitude = location.latitude
+      longitude = location.longitude
     } catch (error) {
-      console.error("Location access denied or failed:", error);
+      console.error("Location access denied or failed:", error)
       // You could provide a fallback here, like setting latitude/longitude to null or a default value.
     }
 
     if (images && images.length > 0) {
       const uploads = await Promise.all(
         images.map(async (imageFile) => {
-          const filePath = `communityphoto/${Date.now()}-${imageFile.name}`;
+          const filePath = `communityphoto/${Date.now()}-${imageFile.name}`
 
-          const { data: uploadData, error: uploadError } = await supabase
-            .storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from("communityphoto")
-            .upload(filePath, imageFile);
+            .upload(filePath, imageFile)
 
           if (uploadError) {
-            console.error("Image upload failed:", uploadError);
-            return null;
+            console.error("Image upload failed:", uploadError)
+            return null
           }
 
-          return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/communityphoto/${uploadData.path}`;
-        })
-      );
+          return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/communityphoto/${uploadData.path}`
+        }),
+      )
 
       // Remove any null entries from failed uploads
-      imageUrls = uploads.filter((url): url is string => url !== null);
+      imageUrls = uploads.filter((url): url is string => url !== null)
     }
 
     const { error } = await supabase.from("communitycomments").insert([
@@ -280,25 +313,185 @@ export default function Feedback({
         username: "John", // replace with actual user info if available
         latitude: latitude,
         longitude: longitude,
-      }
-    ]);
+      },
+    ])
 
     if (error) {
-      console.error("Error submitting feedback:", error);
-      alert("Failed to submit feedback. Please try again.");
+      console.error("Error submitting feedback:", error)
+      setSubmissionStatus("error")
     } else {
-      alert("Feedback submitted successfully!");
-      setComment("");
-      setSatisfactionRating("3");
-      setImages([]);
-      setImagePreviews([]);
+      setSubmissionStatus("success")
+
+      setComment("")
+      setSatisfactionRating("3")
+      setImages([])
+      setImagePreviews([])
+
+      // Refresh comments after submission
+      const { data } = await supabase.from("communitycomments").select("*").order("created_at", { ascending: false })
+
+      if (Array.isArray(data)) {
+        const grouped: Comment[][] = milestones.map((milestone) => {
+          return data.filter((comment) => comment.milestone_id === milestone.id)
+        })
+        setGroupedComments(grouped)
+      }
     }
-  };
+  }
 
-  // const activeComments = groupedComments[activeMilestone];
-  // const totalVotes = calculateTotalVotes(activeComments);
-  // const averageRating = calculateAverageRating(activeComments);
+  function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371 // Radius of the Earth in km
+    const dLat = deg2rad(lat2 - lat1)
+    const dLon = deg2rad(lon2 - lon1)
 
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    const distance = R * c
+
+    return distance
+  }
+
+  function deg2rad(deg: number): number {
+    return deg * (Math.PI / 180)
+  }
+
+  // Function to render star rating
+  const StarRating = ({ rating }: { rating: number }) => {
+    return (
+      <div className="flex items-center gap-1 mt-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-3.5 w-3.5 ${
+              star <= rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"
+            }`}
+          />
+        ))}
+        <span className="text-xs text-muted-foreground ml-1">{rating}/5</span>
+      </div>
+    )
+  }
+
+  // Function to render location status based on distance
+  const LocationStatus = ({ comment, milestoneIndex }: { comment: Comment; milestoneIndex: number }) => {
+    // If location data is missing, return null
+    if (!comment.latitude || !comment.longitude || !milestones[milestoneIndex]?.location) {
+      return null
+    }
+
+    const milestoneLocation = milestones[milestoneIndex].location
+    const distance = getDistanceFromLatLonInKm(
+      comment.latitude,
+      comment.longitude,
+      milestoneLocation.latitude,
+      milestoneLocation.longitude,
+    )
+
+    let statusColor = ""
+    let statusText = ""
+
+    if (distance <= 0.3) {
+      statusColor = "text-green-600"
+      statusText = "User is on site"
+    } else if (distance <= 1) {
+      statusColor = "text-yellow-600"
+      statusText = "User is near site — please confirm location"
+    } else {
+      statusColor = "text-red-600"
+      statusText = "Warning: User is likely not at the site"
+    }
+
+    return (
+      <div className={`flex items-center gap-2 text-xs ${statusColor} mt-2`}>
+        <MapPin className="h-3 w-3" />
+        <div>
+          <span className="font-medium">{statusText}</span>
+          <span className="ml-1">({distance.toFixed(2)} km)</span>
+        </div>
+      </div>
+    )
+  }
+
+  const activeComments = groupedComments[activeMilestone]
+  const totalVotes = calculateTotalVotes(activeComments)
+  const averageRating = calculateAverageRating(activeComments)
+
+  const StatusModal = () => {
+    const handleCloseModal = () => {
+      setIsModalOpen(false)
+      // Only reset the status after the modal closing animation completes
+      setTimeout(() => setSubmissionStatus("idle"), 300)
+    }
+
+    return (
+      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+        <DialogContent className="sm:max-w-md flex flex-col items-center justify-center py-12">
+          <AnimatePresence mode="wait">
+            {submissionStatus === "loading" && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center text-center"
+              >
+                <LoaderIcon className="h-12 w-12 animate-spin text-primary mb-4" />
+                <h3 className="text-lg font-medium">Submitting your feedback...</h3>
+                <p className="text-sm text-muted-foreground mt-2">Please wait while we process your submission.</p>
+              </motion.div>
+            )}
+
+            {submissionStatus === "success" && (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="flex flex-col items-center text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-4"
+                >
+                  <CheckCircle className="h-8 w-8 text-green-600" />
+                </motion.div>
+                <h3 className="text-lg font-medium">Feedback submitted successfully!</h3>
+                <p className="text-sm text-muted-foreground mt-2">Thank you for sharing your experience.</p>
+              </motion.div>
+            )}
+
+            {submissionStatus === "error" && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="flex flex-col items-center text-center"
+              >
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center mb-4"
+                >
+                  <XCircle className="h-8 w-8 text-red-600" />
+                </motion.div>
+                <h3 className="text-lg font-medium">Failed to submit feedback</h3>
+                <p className="text-sm text-muted-foreground mt-2">Please try again later.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Card className="border-0 bg-white shadow-sm dark:bg-zinc-900">
@@ -370,6 +563,15 @@ export default function Feedback({
                         <span className="font-medium">Venue:</span>
                         <span>{milestones[activeMilestone].serviceProvider.venue}</span>
                       </div>
+
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="font-medium">Location:</span>
+                        <span>
+                          {milestones[activeMilestone].location.latitude.toFixed(4)},{" "}
+                          {milestones[activeMilestone].location.longitude.toFixed(4)}
+                        </span>
+                      </div>
                     </div>
 
                     <div>
@@ -404,34 +606,25 @@ export default function Feedback({
                     </div>
                   ))}
                 </div>
-
               </div>
             </TabsContent>
 
             {/* Community Feedback Tab */}
             <TabsContent value="community-feedback" className="space-y-4">
               {/* Satisfaction Rating */}
-              {/* { <div className="rounded-lg border bg-card p-4">
+              <div className="rounded-lg border bg-card p-4">
                 <h3 className="mb-2 text-lg font-medium">Community Satisfaction</h3>
 
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <Progress
-                      value={milestones.communityFeedback. * 20}
-                      className="h-4"
-                    />
+                    <Progress value={averageRating * 20} className="h-4" />
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-bold">
-                      {averageRating}
-                    </span>
-                    <p className="text-xs text-muted-foreground">
-                      Based on {totalVotes} votes
-                    </p>
+                    <span className="text-lg font-bold">{averageRating.toFixed(1)}</span>
+                    <p className="text-xs text-muted-foreground">Based on {totalVotes} votes</p>
                   </div>
                 </div>
-              </div>  */}
-
+              </div>
 
               {/* Community Comments */}
               <div className="rounded-lg border bg-card p-4">
@@ -444,23 +637,35 @@ export default function Feedback({
                         {comment.image_urls?.[0] && (
                           <div className="hidden sm:block">
                             <Image
-                              src={comment.image_urls[0]}
+                              src={comment.image_urls[0] || "/placeholder.svg"}
                               alt="Feedback image"
                               width={100}
                               height={100}
-
                               className="h-24 w-24 rounded-md object-cover"
                             />
                           </div>
                         )}
                         <div className="flex-1">
-                          <p className="text-sm font-bold" >{comment.username}</p>
-                          <p className="text-sm">{comment.text}</p>
+                          <div className="flex justify-between items-start mb-1">
+                            <div>
+                              <p className="text-sm font-bold">{comment.username}</p>
+                              {/* Add star rating component */}
+                              {comment.satisfaction_level && <StarRating rating={comment.satisfaction_level} />}
+                            </div>
+                            {comment.created_at && (
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(comment.created_at), "MMM d, yyyy • h:mm a")}
+                              </p>
+                            )}
+                          </div>
+                          <p className="text-sm mt-2">{comment.text}</p>
+
+                          {/* Location status indicator */}
+                          <LocationStatus comment={comment} milestoneIndex={activeMilestone} />
                         </div>
                       </div>
                     </div>
                   ))}
-
                 </div>
               </div>
 
@@ -471,7 +676,9 @@ export default function Feedback({
                 <div className="space-y-4">
                   {/* Camera Interface */}
                   <div className="rounded-md border p-3">
-                    <label htmlFor="photoInput" className="block mb-2 text-sm font-medium">Take a Photo</label>
+                    <label htmlFor="photoInput" className="block mb-2 text-sm font-medium">
+                      Take a Photo
+                    </label>
 
                     <input
                       type="file"
@@ -484,7 +691,7 @@ export default function Feedback({
 
                     <button
                       type="button"
-                      onClick={() => document.getElementById('photoInput').click()}
+                      onClick={() => document.getElementById("photoInput")?.click()}
                       className="bg-[#0CD0A6] hover:bg-[#0AB993] text-white font-medium py-2 px-4 rounded-full w-full flex items-center justify-center gap-2 transition-colors"
                     >
                       Open Camera
@@ -496,30 +703,33 @@ export default function Feedback({
                       {imagePreviews.map((preview, index) => (
                         <div key={index} className="relative w-full border rounded-md overflow-hidden">
                           <img
-                            src={preview}
+                            src={preview || "/placeholder.svg"}
                             alt={`Preview ${index + 1}`}
                             className="w-full h-auto max-h-[400px] object-contain"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              const updatedImages = images.filter((_, i) => i !== index);
-                              const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
-                              setImages(updatedImages);
-                              setImagePreviews(updatedPreviews);
+                              const updatedImages = images.filter((_, i) => i !== index)
+                              const updatedPreviews = imagePreviews.filter((_, i) => i !== index)
+                              setImages(updatedImages)
+                              setImagePreviews(updatedPreviews)
                             }}
                             className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-red-100 transition-colors"
                           >
                             <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
                       ))}
                     </div>
                   )}
-
-
 
                   {/* Comment Input */}
                   <div>
@@ -560,6 +770,7 @@ export default function Feedback({
           </Tabs>
         )}
       </CardContent>
+      <StatusModal />
     </Card>
   )
 }

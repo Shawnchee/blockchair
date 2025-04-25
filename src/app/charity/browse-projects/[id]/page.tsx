@@ -613,7 +613,7 @@ Most vulnerable homeless people are disadvantaged by this even further, as there
       // Set up an interval to refresh the contract data every 30 seconds
       const intervalId = setInterval(() => {
         fetchContractData()
-      }, 30000)
+      }, 100000)
 
       // Clean up the interval when the component unmounts
       return () => clearInterval(intervalId)
