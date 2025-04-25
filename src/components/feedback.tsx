@@ -88,6 +88,9 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     {
       id: 1,
       name: "Land Preparation and Surveying",
+      status_color: "text-green-600",
+      status_text: "Vendor is on site",
+      distance: 0.01,
       serviceProvider: {
         date: "May 15, 2025",
         time: "10:00 AM - 2:00 PM",
@@ -121,6 +124,9 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     {
       id: 2,
       name: "Foundation and Structural Work",
+      status_color: "text-red-600",
+      status_text: "Warning: User is likely not at the site",
+      distance: 0.01,
       serviceProvider: {
         date: "June 10, 2025",
         time: "9:00 AM - 4:00 PM",
@@ -150,6 +156,9 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     {
       id: 3,
       name: "Electrical and Plumbing Installation",
+      status_color: "text-green-600",
+      status_text: "Vendor is on site",
+      distance: 0.01,
       serviceProvider: {
         date: "July 5, 2025",
         time: "10:00 AM - 3:00 PM",
@@ -179,6 +188,9 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     {
       id: 4,
       name: "Painting and Furnishing",
+      status_color: "text-green-600",
+      status_text: "Vendor is on site",
+      distance: 0.01,
       serviceProvider: {
         date: "August 2, 2025",
         time: "10:00 AM - 5:00 PM",
@@ -208,6 +220,9 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
     {
       id: 5,
       name: "School Supplies and Equipment",
+      status_color: "text-green-600",
+      status_text: "Vendor is on site",
+      distance: 0.01,
       serviceProvider: {
         date: "August 28, 2025",
         time: "9:00 AM - 12:00 PM",
@@ -658,6 +673,13 @@ export default function Feedback({ campaignTitle, isLoading = false }: LatestUpd
                           height={300}
                           className="h-48 w-full object-cover"
                         />
+                        <div className={`flex items-center gap-2 text-xs ${milestones[activeMilestone].status_color} mt-2`}>
+        <MapPin className="h-3 w-3" />
+        <div>
+          <span className="font-medium">{milestones[activeMilestone].status_text}</span>
+          <span className="ml-1">({milestones[activeMilestone].distance.toFixed(2)} km)</span>
+        </div>
+      </div>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {milestones[activeMilestone].serviceProvider.descriptions[idx] || ""}
