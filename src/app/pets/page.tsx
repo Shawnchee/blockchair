@@ -1,47 +1,47 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Utensils, Shirt, Edit, BarChart3 } from "lucide-react"
-import PetStats from "@/components/pets/pet-stats"
-import PetActivityLog from "@/components/pets/pet-activity-log"
-import getCurrentUser from "@/hooks/getCurrentUser"
-import supabase from "@/utils/supabase/client"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Utensils, Shirt, Edit, BarChart3 } from "lucide-react";
+import PetStats from "@/components/pets/pet-stats";
+import PetActivityLog from "@/components/pets/pet-activity-log";
+import getCurrentUser from "@/hooks/getCurrentUser";
+import supabase from "@/utils/supabase/client";
 
 export default function PetPage() {
-  const [petName, setPetName] = useState("The Magical Panda ✨")
-  const [background, setBackground] = useState("space")
-  const [isRenaming, setIsRenaming] = useState(false)
-  const [newName, setNewName] = useState(petName)
-  const [user, setUser] = useState(null)
+  const [petName, setPetName] = useState("The Magical Panda ✨");
+  const [background, setBackground] = useState("space");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(petName);
+  const [user, setUser] = useState(null);
 
   // Get user data
   // const user = getCurrentUser()
   // console.log(user)
 
-  const sesUser = getCurrentUser()
+  const sesUser = getCurrentUser();
 
   useEffect(() => {
-    if(sesUser?.email) {
+    if (sesUser?.email) {
       const fetchUser = async () => {
         const { data, error } = await supabase
           .from("users")
           .select()
-          .eq('email',"Somendran737@gmail.com")
-          .single()
+          .eq("email", "gnawyz@gmail.com")
+          .single();
         if (error) {
-          console.error(error)
-          return
+          console.error(error);
+          return;
         }
-        console.log("Setting User data")
-        console.log(data)
-        setUser(data)
-      }
-      fetchUser()
+        console.log("Setting User data");
+        console.log(data);
+        setUser(data);
+      };
+      fetchUser();
     }
-  }, [sesUser])
+  }, [sesUser]);
 
   useEffect(() => {
     if (user) {
@@ -49,31 +49,31 @@ export default function PetPage() {
       // setPetName(user.pet_name)
       // setBackground(user.pet_background)
     }
-  }, [user])
+  }, [user]);
 
   const backgrounds = {
     none: "bg-stone-50",
     park: "bg-gradient-to-b from-green-100 to-blue-100",
     beach: "bg-gradient-to-b from-blue-100 to-yellow-100",
     city: "bg-gradient-to-b from-gray-100 to-purple-100",
-  }
+  };
 
   const handleRename = () => {
     if (isRenaming) {
-      setPetName(newName)
+      setPetName(newName);
     }
-    setIsRenaming(!isRenaming)
-  }
+    setIsRenaming(!isRenaming);
+  };
 
   const handleBackgroundChange = (bg: string) => {
-    setBackground(bg)
-  }
+    setBackground(bg);
+  };
 
   const getPet = (path: string) => {
-    const bucket = 'virtual-pets'
-    const folder = 'pet-combined'
+    const bucket = "virtual-pets";
+    const folder = "pet-combined";
     return `https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/${bucket}/${folder}/${path}`;
-  }
+  };
 
   if (!user) {
     return (
@@ -82,10 +82,10 @@ export default function PetPage() {
           <h1 className="text-3xl font-bold text-center">Loading...</h1>
         </div>
       </div>
-    )
+    );
   }
 
-  const petImage = user.pet_owned ? getPet(user.pet_owned) : "/placeholder.svg"
+  const petImage = user.pet_owned ? getPet(user.pet_owned) : "/placeholder.svg";
 
   return (
     <div className="container px-4 pt-24 pb-8 min-h-screen md:px-6  ml-auto mr-auto">
@@ -93,8 +93,13 @@ export default function PetPage() {
         {/* Pet Display Area */}
         <div className="flex flex-col items-center">
           <div
-            className={`relative w-[800px] h-[400px] rounded-xl overflow-hidden ${backgrounds[background as keyof typeof backgrounds]} flex items-center justify-center mb-6`}
-            style={{ backgroundImage: `url(https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/virtual-pets/background/${background}.png)`, backgroundPosition: '0px -300px' }}
+            className={`relative w-[800px] h-[400px] rounded-xl overflow-hidden ${
+              backgrounds[background as keyof typeof backgrounds]
+            } flex items-center justify-center mb-6`}
+            style={{
+              backgroundImage: `url(https://jalcuslxbhoxepybolxw.supabase.co/storage/v1/object/public/virtual-pets/background/${background}.png)`,
+              backgroundPosition: "0px -300px",
+            }}
           >
             <div className="relative w-[400px] h-[400px] cursor-pointer transform transition-transform hover:scale-110 active:scale-95">
               <Image
@@ -145,40 +150,56 @@ export default function PetPage() {
           </div>
 
           <div className="mt-8 w-full">
-            <h2 className="text-xl font-bold mb-4 text-purple-700">Background</h2>
+            <h2 className="text-xl font-bold mb-4 text-purple-700">
+              Background
+            </h2>
             <div className="grid grid-cols-4 gap-4">
               <Button
                 variant={background === "none" ? "default" : "outline"}
                 onClick={() => handleBackgroundChange("none")}
-                className={background === "none" ? "bg-stone-600 hover:bg-stone-700" : ""}
+                className={
+                  background === "none" ? "bg-stone-600 hover:bg-stone-700" : ""
+                }
               >
                 None
               </Button>
               <Button
                 variant={background === "park" ? "default" : "outline"}
                 onClick={() => handleBackgroundChange("park")}
-                className={background === "park" ? "bg-green-600 hover:bg-green-700" : ""}
+                className={
+                  background === "park" ? "bg-green-600 hover:bg-green-700" : ""
+                }
               >
                 Forest
               </Button>
               <Button
                 variant={background === "beach" ? "default" : "outline"}
                 onClick={() => handleBackgroundChange("beach")}
-                className={background === "beach" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                className={
+                  background === "beach" ? "bg-blue-600 hover:bg-blue-700" : ""
+                }
               >
                 Beach
               </Button>
               <Button
                 variant={background === "city" ? "default" : "outline"}
                 onClick={() => handleBackgroundChange("city")}
-                className={background === "city" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                className={
+                  background === "city"
+                    ? "bg-purple-600 hover:bg-purple-700"
+                    : ""
+                }
               >
                 City
               </Button>
               <Button
                 variant={background === "space" ? "default" : "outline"}
                 onClick={() => handleBackgroundChange("space")}
-                className={background === "space" ? "bg-indigo-600 hover:bg-indigo-700" : ""}
+                className={
+                  background === "space"
+                    ? "bg-indigo-600 hover:bg-indigo-700"
+                    : ""
+                }
               >
                 Space
               </Button>
@@ -190,19 +211,23 @@ export default function PetPage() {
         <div className="space-y-6">
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4 text-purple-700">Pet Stats</h2>
+              <h2 className="text-xl font-bold mb-4 text-purple-700">
+                Pet Stats
+              </h2>
               <PetStats />
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-xl font-bold mb-4 text-purple-700">Recent Activity</h2>
+              <h2 className="text-xl font-bold mb-4 text-purple-700">
+                Recent Activity
+              </h2>
               <PetActivityLog />
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }
