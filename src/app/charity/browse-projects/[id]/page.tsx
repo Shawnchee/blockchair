@@ -134,16 +134,11 @@ const DonationDetails: React.FC = () => {
   const [milestoneTransactions, setMilestoneTransactions] = useState([])
 
   // Sample problem statement and organization info
-  const defaultProblemStatement = `When a powerful earthquake struck Jakarta, countless lives were upended in an instant. Homes were destroyed, families were displaced, and basic necessities became scarce. Vulnerable communities — especially those in low-income and densely populated areas — have been hit the hardest.
+  const defaultProblemStatement = `The vibrant community of Sungai Dua deserves a secondary school that truly empowers its students to thrive in the 21st century. Yet, Sungai Dua Secondary School, a cornerstone of this community, faces significant hurdles in fulfilling this crucial role. Overcrowded classrooms strain resources and limit individual attention for students. Outdated facilities and a lack of modern technology hinder the delivery of a dynamic and relevant curriculum, potentially leaving students ill-prepared for the demands of higher education and future careers. Furthermore, limited access to specialized learning spaces and extracurricular opportunities restricts the holistic development of students, impacting their ability to explore their passions and cultivate essential life skills.
 
-The Disaster Relief Fund is dedicated to providing immediate and long-term assistance to individuals and families affected by this devastating event. Our efforts include delivering emergency supplies, food, clean water, temporary shelters, and support for rebuilding homes and livelihoods.
+How can we collaboratively reimagine and revitalize Sungai Dua Secondary School to create a learning environment that not only meets the current needs of its students but also ignites their potential and fosters a brighter future for the entire Sungai Dua community?`
 
-We are working hand-in-hand with local volunteers and trusted partners on the ground to ensure timely and effective aid distribution. Every donation helps bring hope, safety, and stability back to those impacted, allowing them to begin the journey of recovery with dignity.
-
-Most vulnerable homeless people are disadvantaged by this even further, as there is an absence of public digital centers in developing countries. This leads to limited access to computers and with it the opportunities and aid it brings, as well as contributing to losing connection with family and friends.`
-
-  const defaultOrganizationInfo = `Founded in 2018, our organization is dedicated to supporting individuals and communities facing social and economic hardship. We specialize in providing urgent aid and long-term support to those affected by natural disasters, homelessness, and digital exclusion.`
-
+  const defaultOrganizationInfo = `At Amanah Education Foundation, we believe in building more than just structures; we build futures and strengthen communities. Rooted in a commitment to quality craftsmanship and sustainable practices, we undertake construction projects with a focus on creating lasting, positive impact. From educational facilities to essential infrastructure, we collaborate closely with local stakeholders to ensure our work reflects the unique needs and aspirations of the communities we serve.`
   useEffect(() => {
     if (donation?.contract_abi && donation?.smart_contract_address) {
       try {
