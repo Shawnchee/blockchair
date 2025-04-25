@@ -55,6 +55,14 @@ With an emphasis on AI-driven safety, analytics, and personalization, BlockChair
   <img src="./public/readme/milestone-system.png" alt="Milestone System Screenshot" width="400"/>
 </div>
 
+### 📷 Real-Time Proof of Work via Camera Feeds
+
+- Charities can upload **real-time video or photo updates** as proof of milestone progress  
+- **Live camera integrations** allow donors to witness project developments as they happen  
+- Media uploads are securely time-stamped and associated with specific milestones  
+- Increases **trust and transparency** by offering visual evidence of how funds are being used
+- 
+
 ### 🤖 AI-Powered Trust & Personalization
 - **AI Company Validator**: Verifies the legitimacy and operational history of charities
 
